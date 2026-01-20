@@ -20,19 +20,22 @@ func main() {
 	db := config.ConnectDB(cfg)
 
 	// Auto migrate
-	if err := db.AutoMigrate(&models.User{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.SamplePost{}); err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}
 
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(db)
+	samplePostRepo := repository.NewPostRepository(db)
 
 	// Initialize services
 	authService := services.NewAuthService(userRepo, cfg.JWTSecret)
+	postService := services.NewPostService(samplePostRepo)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
 	userHandler := handlers.NewUserHandler(userRepo)
+	postHandler := handlers.NewPostHandler(postService)
 
 	// Setup Gin
 	r := gin.Default()
@@ -55,6 +58,15 @@ func main() {
 		{
 			protected.GET("/auth/me", userHandler.GetMe)
 			// Add more protected routes here
+			posts := protected.Group("/posts")
+			{
+				posts.POST("", postHandler.CreatePost)           // CREATE
+				posts.GET("", postHandler.GetAllPosts)            // READ ALL
+				posts.GET("/my", postHandler.GetMyPosts)          // READ MY POSTS
+				posts.GET("/:id", postHandler.GetPost)            // READ ONE
+				posts.PUT("/:id", postHandler.UpdatePost)         // UPDATE
+				posts.DELETE("/:id", postHandler.DeletePost)      // DELETE
+			}
 		}
 	}
 
