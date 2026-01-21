@@ -19,9 +19,3 @@ func (r *Repository) FindByEmail(email string) (*User, error) {
 	err := r.db.Where("email = ?", email).First(&user).Error
 	return &user, err
 }
-
-func (r *Repository) FindByID(id uint) (*User, error) {
-	var user User
-	err := r.db.First(&user, id).Error
-	return &user, err
-}

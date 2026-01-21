@@ -1,15 +1,17 @@
-package auth
+package authdemo
 
 import "github.com/gin-gonic/gin"
 
 func RegisterRoutes(router *gin.RouterGroup, handler *Handler, authMiddleware gin.HandlerFunc) {
-	auth := router.Group("/auth")
+	auth := router.Group("/authdemo")
 	{
 		// Public routes
 		auth.POST("/register", handler.Register)
 		auth.POST("/login", handler.Login)
+
+		// Protected routes
+		auth.GET("/me", authMiddleware, handler.GetMe)
 		
-		auth.GET("/get-user-by-email", handler.GetUserByEmail)
 		// Admin only - Generate API keys (you can add admin check later)
 		auth.POST("/generate-api-key", handler.GenerateAPIKey)
 	}

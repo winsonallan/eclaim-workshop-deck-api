@@ -1,14 +1,21 @@
 package auth
 
 type RegisterRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=6"`
-	Name     string `json:"name" binding:"required"`
+	UserProfileNo uint   `json:"user_profile_no"`
+	RoleNo        uint   `json:"role_no" binding:"required"`
+	Name          string `json:"user_name" binding:"required"`
+	UserId        string `json:"user_id" binding:"required"`
+	Email         string `json:"email" binding:"required,email"`
+	Password      string `json:"password" binding:"required,min=6"`
 }
 
 type LoginRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
+}
+
+type FindByEmailRequest struct {
+	Email string `json:"email" binding:"required,email"`
 }
 
 type AuthResponse struct {

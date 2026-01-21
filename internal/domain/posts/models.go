@@ -1,7 +1,7 @@
 package posts
 
 import (
-	"eclaim-workshop-deck-api/internal/domain/auth"
+	"eclaim-workshop-deck-api/internal/domain/authdemo"
 	"time"
 )
 
@@ -11,7 +11,7 @@ type Post struct {
 	PostContent   string         `gorm:"type:text" json:"post_content"`
 	UserNo    		uint           `gorm:"not null;type:int(11);comment:References the primary key of the s_users table" json:"user_no"`
 	IsLocked 			bool 					 `gorm:"not null;default:0" json:"is_locked"`
-	User      		auth.User      `gorm:"foreignKey:UserNo;references:UserNo" json:"user"`
+	User      		authdemo.UserDemo      `gorm:"foreignKey:UserNo;references:UserNo" json:"user"`
 	CreatedAt 		time.Time      `gorm:"column:created_date" json:"created_date"`
 	UpdatedAt 		time.Time      `gorm:"column:last_modified_date" json:"last_modified_date"`
 }

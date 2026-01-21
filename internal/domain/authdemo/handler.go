@@ -1,4 +1,4 @@
-package auth
+package authdemo
 
 import (
 	"crypto/rand"
@@ -63,21 +63,16 @@ func (h *Handler) Login(c *gin.Context) {
 	})
 }
 
-func (h *Handler) GetUserByEmail(c *gin.Context) {
-	var req FindByEmailRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error())
-		return
-	}
+func (h *Handler) GetMe(c *gin.Context) {
+	userID, _ := c.Get("user_id")
 
-	user, err := h.service.GetUserByEmail(req)
-
+	user, err := h.service.GetUserByID(userID.(uint))
 	if err != nil {
-		response.Error(c, http.StatusNotFound, "User with that email is not found")
+		response.Error(c, http.StatusNotFound, "User not found")
 		return
 	}
 
-	response.Success(c, http.StatusOK, "User Found", user)
+	response.Success(c, http.StatusOK, "User retrieved successfully", gin.H{"user": user})
 }
 
 func (h *Handler) GenerateAPIKey(c *gin.Context) {

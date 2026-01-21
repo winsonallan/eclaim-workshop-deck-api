@@ -1,4 +1,4 @@
-package auth
+package authdemo
 
 import (
 	"eclaim-workshop-deck-api/pkg/utils"
@@ -19,7 +19,7 @@ func NewService(repo *Repository, jwtSecret string) *Service {
 	}
 }
 
-func (s *Service) Register(req RegisterRequest) (*User, string, error) {
+func (s *Service) Register(req RegisterRequest) (*UserDemo, string, error) {
 	// Check if user exists
 	_, err := s.repo.FindByEmail(req.Email)
 	if err == nil {
@@ -33,12 +33,10 @@ func (s *Service) Register(req RegisterRequest) (*User, string, error) {
 	}
 
 	// Create user
-	user := &User{
-		RoleNo: req.RoleNo,
-		UserName:     req.Name,
-		UserId: req.UserId,
+	user := &UserDemo{
 		Email:    req.Email,
 		Password: string(hashedPassword),
+		Name:     req.Name,
 	}
 
 	if err := s.repo.Create(user); err != nil {
@@ -54,7 +52,7 @@ func (s *Service) Register(req RegisterRequest) (*User, string, error) {
 	return user, token, nil
 }
 
-func (s *Service) Login(req LoginRequest) (*User, string, error) {
+func (s *Service) Login(req LoginRequest) (*UserDemo, string, error) {
 	// Find user
 	user, err := s.repo.FindByEmail(req.Email)
 	if err != nil {
@@ -75,11 +73,6 @@ func (s *Service) Login(req LoginRequest) (*User, string, error) {
 	return user, token, nil
 }
 
-func (s *Service) GetUserByEmail(req FindByEmailRequest) (*User, error) {
-	user, err := s.repo.FindByEmail(req.Email)
-	if err != nil {
-		return nil, errors.New("User with that email not found!")
-	}
-
-	return user, nil
+func (s *Service) GetUserByID(id uint) (*UserDemo, error) {
+	return s.repo.FindByID(id)
 }
