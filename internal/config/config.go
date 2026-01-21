@@ -25,11 +25,11 @@ func LoadConfig() *Config {
 	}
 
 	return &Config{
-		DBHost:      getEnv("DB_HOST", "localhost"),
+		DBHost:      getEnv("DB_HOST", "192.168.88.226"),
 		DBPort:      getEnv("DB_PORT", "3306"),
 		DBUser:      getEnv("DB_USER", "root"),
 		DBPassword:  getEnv("DB_PASSWORD", ""),
-		DBName:      getEnv("DB_NAME", "testdb"),
+		DBName:      getEnv("DB_NAME", "workshop_deck_2025"),
 		JWTSecret:   getEnv("JWT_SECRET", "secret"),
 		Port:        getEnv("PORT", "8080"),
 		FrontendURL: getEnv("FRONTEND_URL", "http://localhost:3000"),

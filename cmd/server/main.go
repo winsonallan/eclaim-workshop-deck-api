@@ -2,11 +2,9 @@ package main
 
 import (
 	"eclaim-workshop-deck-api/internal/config"
-	"eclaim-workshop-deck-api/internal/handlers"
+	"eclaim-workshop-deck-api/internal/domain/auth"
+	"eclaim-workshop-deck-api/internal/domain/posts"
 	"eclaim-workshop-deck-api/internal/middleware"
-	"eclaim-workshop-deck-api/internal/models"
-	"eclaim-workshop-deck-api/internal/repository"
-	"eclaim-workshop-deck-api/internal/services"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -20,54 +18,36 @@ func main() {
 	db := config.ConnectDB(cfg)
 
 	// Auto migrate
-	if err := db.AutoMigrate(&models.User{}, &models.SamplePost{}); err != nil {
+	if err := db.AutoMigrate(&auth.User{}, &posts.Post{}); err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}
 
-	// Initialize repositories
-	userRepo := repository.NewUserRepository(db)
-	samplePostRepo := repository.NewPostRepository(db)
+	// Initialize Auth domain
+	authRepo := auth.NewRepository(db)
+	authService := auth.NewService(authRepo, cfg.JWTSecret)
+	authHandler := auth.NewHandler(authService)
 
-	// Initialize services
-	authService := services.NewAuthService(userRepo, cfg.JWTSecret)
-	postService := services.NewPostService(samplePostRepo)
-
-	// Initialize handlers
-	authHandler := handlers.NewAuthHandler(authService)
-	userHandler := handlers.NewUserHandler(userRepo)
-	postHandler := handlers.NewPostHandler(postService)
+	// Initialize Posts domain
+	postsRepo := posts.NewRepository(db)
+	postsService := posts.NewService(postsRepo)
+	postsHandler := posts.NewHandler(postsService)
 
 	// Setup Gin
 	r := gin.Default()
-
-	// Middleware
 	r.Use(middleware.CORSMiddleware(cfg.FrontendURL))
 
-	// Public routes
+	// API routes
 	api := r.Group("/api")
-	{
-		auth := api.Group("/auth")
-		{
-			auth.POST("/register", authHandler.Register)
-			auth.POST("/login", authHandler.Login)
-		}
 
-		// Protected routes
-		protected := api.Group("")
-		protected.Use(middleware.AuthMiddleware(cfg.JWTSecret))
-		{
-			protected.GET("/auth/me", userHandler.GetMe)
-			// Add more protected routes here
-			posts := protected.Group("/posts")
-			{
-				posts.POST("", postHandler.CreatePost)           // CREATE
-				posts.GET("", postHandler.GetAllPosts)            // READ ALL
-				posts.GET("/my", postHandler.GetMyPosts)          // READ MY POSTS
-				posts.GET("/:id", postHandler.GetPost)            // READ ONE
-				posts.PUT("/:id", postHandler.UpdatePost)         // UPDATE
-				posts.DELETE("/:id", postHandler.DeletePost)      // DELETE
-			}
-		}
+	// Auth routes (public + protected)
+	authMiddleware := middleware.AuthMiddleware(cfg.JWTSecret)
+	auth.RegisterRoutes(api, authHandler, authMiddleware)
+
+	// Protected routes
+	protected := api.Group("")
+	protected.Use(authMiddleware)
+	{
+		posts.RegisterRoutes(protected, postsHandler)
 	}
 
 	// Start server
