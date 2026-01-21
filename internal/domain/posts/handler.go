@@ -31,7 +31,7 @@ func (h *Handler) CreatePost(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, http.StatusCreated, "Post created successfully", gin.H{"post": post})
+	response.Success(c, http.StatusCreated, "Post created successfully", gin.H{"post": ToPostResponse(post)})
 }
 
 func (h *Handler) GetAllPosts(c *gin.Context) {
@@ -42,7 +42,7 @@ func (h *Handler) GetAllPosts(c *gin.Context) {
 	}
 
 	response.Success(c, http.StatusOK, "Posts retrieved successfully", gin.H{
-		"posts": posts,
+		"posts": ToPostResponses(posts),
 		"count": len(posts),
 	})
 }
@@ -57,7 +57,7 @@ func (h *Handler) GetMyPosts(c *gin.Context) {
 	}
 
 	response.Success(c, http.StatusOK, "Posts retrieved successfully", gin.H{
-		"posts": posts,
+		"posts": ToPostResponses(posts),
 		"count": len(posts),
 	})
 }
@@ -76,7 +76,7 @@ func (h *Handler) GetPost(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, http.StatusOK, "Post retrieved successfully", gin.H{"post": post})
+	response.Success(c, http.StatusOK, "Post retrieved successfully", gin.H{"post": ToPostResponse(post)})
 }
 
 func (h *Handler) UpdatePost(c *gin.Context) {
@@ -109,7 +109,7 @@ func (h *Handler) UpdatePost(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, http.StatusOK, "Post updated successfully", gin.H{"post": post})
+	response.Success(c, http.StatusOK, "Post updated successfully", gin.H{"post": ToPostResponse(post)})
 }
 
 func (h *Handler) DeletePost(c *gin.Context) {

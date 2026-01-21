@@ -36,7 +36,7 @@ func APIKeyMiddleware(db *gorm.DB) gin.HandlerFunc {
 
 		// Store API key info in context for logging/analytics
 		c.Set("api_key_name", key.Name)
-		c.Set("api_key_no", key.ID)
+		c.Set("api_key_no", key.ApiKeyNo)
 		
 		c.Next()
 	}

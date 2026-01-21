@@ -48,29 +48,12 @@ func main() {
 
 	// API routes
 	api := r.Group("/api")
-	
-	// Apply API Key middleware to ALL API routes
 	api.Use(middleware.APIKeyMiddleware(db))
-	{
-		// Public routes (API Key required, but NO JWT)
-		authGroup := api.Group("/auth")
-		{
-			authGroup.POST("/register", authHandler.Register)
-			authGroup.POST("/login", authHandler.Login)
-		}
+	authMiddleware := middleware.AuthMiddleware(cfg.JWTSecret)
 
-		// Protected routes (API Key + JWT required)
-		authMiddleware := middleware.AuthMiddleware(cfg.JWTSecret)
-		protected := api.Group("")
-		protected.Use(authMiddleware)
-		{
-			// Auth protected routes
-			protected.GET("/auth/me", authHandler.GetMe)
-			
-			// Posts routes
-			posts.RegisterRoutes(protected, postsHandler)
-		}
-	}
+	// Apply API Key middleware to ALL API routes
+	auth.RegisterRoutes(api, authHandler, authMiddleware)
+	posts.RegisterRoutes(api, postsHandler, authMiddleware)
 
 	// Start server
 	log.Printf("Server starting on port %s", cfg.Port)

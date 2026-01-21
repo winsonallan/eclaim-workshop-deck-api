@@ -28,7 +28,7 @@ func (s *Service) CreatePost(userID uint, req CreatePostRequest) (*Post, error) 
 		return nil, err
 	}
 
-	return post, nil
+	return s.repo.FindByID(post.PostNo)
 }
 
 func (s *Service) GetAllPosts() ([]Post, error) {

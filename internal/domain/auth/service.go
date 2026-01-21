@@ -44,7 +44,7 @@ func (s *Service) Register(req RegisterRequest) (*User, string, error) {
 	}
 
 	// Generate token
-	token, err := utils.GenerateToken(user.ID, user.Email, s.jwtSecret)
+	token, err := utils.GenerateToken(user.UserNo, user.Email, s.jwtSecret)
 	if err != nil {
 		return nil, "", err
 	}
@@ -65,7 +65,7 @@ func (s *Service) Login(req LoginRequest) (*User, string, error) {
 	}
 
 	// Generate token
-	token, err := utils.GenerateToken(user.ID, user.Email, s.jwtSecret)
+	token, err := utils.GenerateToken(user.UserNo, user.Email, s.jwtSecret)
 	if err != nil {
 		return nil, "", err
 	}

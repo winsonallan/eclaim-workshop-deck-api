@@ -16,13 +16,13 @@ func (r *Repository) Create(post *Post) error {
 
 func (r *Repository) FindAll() ([]Post, error) {
 	var posts []Post
-	err := r.db.Preload("User").Order("created_at desc").Find(&posts).Error
+	err := r.db.Preload("User").Order("created_date desc").Find(&posts).Error
 	return posts, err
 }
 
 func (r *Repository) FindByUserID(userID uint) ([]Post, error) {
 	var posts []Post
-	err := r.db.Where("user_id = ?", userID).Order("created_at desc").Find(&posts).Error
+	err := r.db.Where("user_no = ?", userID).Order("created_date desc").Find(&posts).Error
 	return posts, err
 }
 

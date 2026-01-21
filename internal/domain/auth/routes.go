@@ -13,6 +13,6 @@ func RegisterRoutes(router *gin.RouterGroup, handler *Handler, authMiddleware gi
 		auth.GET("/me", authMiddleware, handler.GetMe)
 		
 		// Admin only - Generate API keys (you can add admin check later)
-		auth.POST("/generate-api-key", authMiddleware, handler.GenerateAPIKey)
+		auth.POST("/generate-api-key", handler.GenerateAPIKey)
 	}
 }

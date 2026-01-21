@@ -5,7 +5,7 @@ import (
 )
 
 type User struct {
-	ID        uint      `gorm:"primaryKey;column:user_no;type:int(11);autoIncrement" json:"user_no"`
+	UserNo        uint      `gorm:"primaryKey;column:user_no;type:int(11);autoIncrement" json:"user_no"`
 	Email     string    `gorm:"column:email;type:varchar(100);uniqueIndex;not null" json:"email"`
 	Password  string    `gorm:"column:password;type:varchar(255);not null" json:"-"`
 	Name      string    `gorm:"column:user_name;type:varchar(100)" json:"user_name"`
@@ -18,9 +18,8 @@ func (User) TableName() string {
 	return "s_users"
 }
 
-// API Key Model - ADD THIS
 type APIKey struct {
-	ID          uint       `gorm:"primaryKey;column:api_key_no;type:int(11);autoIncrement" json:"api_key_no"`
+	ApiKeyNo       uint       `gorm:"primaryKey;column:api_key_no;type:int(11);autoIncrement" json:"api_key_no"`
 	Key         string     `gorm:"column:api_key;type:varchar(64);uniqueIndex;not null" json:"api_key"`
 	Name        string     `gorm:"column:key_name;type:varchar(100);not null" json:"key_name"`
 	Description string     `gorm:"column:description;type:text" json:"description"`
