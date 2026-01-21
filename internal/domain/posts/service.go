@@ -19,9 +19,9 @@ func (s *Service) CreatePost(userID uint, req CreatePostRequest) (*Post, error) 
 	}
 
 	post := &Post{
-		Title:   req.Title,
-		Content: req.Content,
-		UserID:  userID,
+		PostTitle:   req.Title,
+		PostContent: req.Content,
+		UserNo:  userID,
 	}
 
 	if err := s.repo.Create(post); err != nil {
@@ -49,15 +49,15 @@ func (s *Service) UpdatePost(postID, userID uint, req UpdatePostRequest) (*Post,
 		return nil, errors.New("post not found")
 	}
 
-	if post.UserID != userID {
+	if post.UserNo != userID {
 		return nil, errors.New("unauthorized: you can only update your own posts")
 	}
 
 	if req.Title != "" {
-		post.Title = req.Title
+		post.PostTitle = req.Title
 	}
 	if req.Content != "" {
-		post.Content = req.Content
+		post.PostContent = req.Content
 	}
 
 	if err := s.repo.Update(post); err != nil {
@@ -73,7 +73,7 @@ func (s *Service) DeletePost(postID, userID uint) error {
 		return errors.New("post not found")
 	}
 
-	if post.UserID != userID {
+	if post.UserNo != userID {
 		return errors.New("unauthorized: you can only delete your own posts")
 	}
 

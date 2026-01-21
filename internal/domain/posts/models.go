@@ -3,17 +3,19 @@ package posts
 import (
 	"eclaim-workshop-deck-api/internal/domain/auth"
 	"time"
-
-	"gorm.io/gorm"
 )
 
 type Post struct {
-	ID        uint           `gorm:"primaryKey" json:"id"`
-	Title     string         `gorm:"not null" json:"title"`
-	Content   string         `gorm:"type:text" json:"content"`
-	UserID    uint           `gorm:"not null" json:"user_id"`
-	User      auth.User      `gorm:"foreignKey:UserID" json:"user,omitempty"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+	ID        uint           `gorm:"column:post_no;primaryKey;type:int;size:11" json:"post_no"`
+	PostTitle     string         `gorm:"not null" json:"post_title"`
+	PostContent   string         `gorm:"type:text" json:"post_content"`
+	UserNo    uint           `gorm:"not null;type:int;size:11" json:"user_no"`
+	IsLocked bool `gorm:"not null;default:0" json:"is_locked"`
+	User      auth.User      `gorm:"foreignKey:UserNo;references:ID; comment:References the primary key of the s_users table" json:"user"`
+	CreatedAt time.Time      `gorm:"column:created_date" json:"created_date"`
+	UpdatedAt time.Time      `gorm:"column:last_modified_date" json:"last_modified_date"`
+}
+
+func (Post) TableName() string {
+	return "s_posts"
 }
