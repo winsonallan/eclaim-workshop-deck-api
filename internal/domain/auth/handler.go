@@ -20,7 +20,6 @@ type GenerateAPIKeyRequest struct {
 	ExpiresIn   int    `json:"expires_in_days"` // Optional: days until expiration (0 = never)
 }
 
-
 func NewHandler(service *Service) *Handler {
 	return &Handler{service: service}
 }
@@ -78,6 +77,23 @@ func (h *Handler) GetUserByEmail(c *gin.Context) {
 	}
 
 	response.Success(c, http.StatusOK, "User Found", user)
+}
+
+func (h *Handler) ChangePassword(c *gin.Context) {
+	var req ChangePasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	user, err := h.service.ChangePassword(req)
+
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+	} else {
+		response.Success(c, http.StatusOK, "Password Changed Successfully", user)
+	}
+
 }
 
 func (h *Handler) GenerateAPIKey(c *gin.Context) {

@@ -34,9 +34,9 @@ func (s *Service) Register(req RegisterRequest) (*User, string, error) {
 
 	// Create user
 	user := &User{
-		RoleNo: req.RoleNo,
-		UserName:     req.Name,
-		UserId: req.UserId,
+		RoleNo:   req.RoleNo,
+		UserName: req.Name,
+		UserId:   req.UserId,
 		Email:    req.Email,
 		Password: string(hashedPassword),
 	}
@@ -79,6 +79,41 @@ func (s *Service) GetUserByEmail(req FindByEmailRequest) (*User, error) {
 	user, err := s.repo.FindByEmail(req.Email)
 	if err != nil {
 		return nil, errors.New("User with that email not found!")
+	}
+
+	return user, nil
+}
+
+func (s *Service) ChangePassword(req ChangePasswordRequest) (*User, error) {
+	user, err := s.repo.FindByEmail(req.Email)
+
+	if err != nil {
+		return nil, errors.New("User with that email not found!")
+	}
+
+	if user.UserId != req.Username {
+		return nil, errors.New("invalid username")
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+		return nil, errors.New("invalid old password")
+	}
+
+	if req.NewPassword != req.ConfirmPassword {
+		return nil, errors.New("new password and confirmation do not match")
+	}
+
+	// ✅ Hash new password before saving
+	hashedNewPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+
+	user.Password = string(hashedNewPassword)
+	user.LastModifiedBy = &user.UserNo
+
+	if err := s.repo.ChangePassword(user); err != nil {
+		return nil, err
 	}
 
 	return user, nil

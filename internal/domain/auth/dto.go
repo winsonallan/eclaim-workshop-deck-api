@@ -18,6 +18,14 @@ type FindByEmailRequest struct {
 	Email string `json:"email" binding:"required,email"`
 }
 
+type ChangePasswordRequest struct {
+	Email           string `json:"email" binding:"required,email"`
+	Username        string `json:"user_id" binding:"required"`
+	Password        string `json:"password" binding:"required,min=6"`
+	NewPassword     string `json:"new_password" binding:"required"`
+	ConfirmPassword string `json:"confirm_password" binding:"required"`
+}
+
 type AuthResponse struct {
 	User  User   `json:"user"`
 	Token string `json:"token"`
