@@ -5,9 +5,9 @@ import (
 	"eclaim-workshop-deck-api/internal/config"
 	"eclaim-workshop-deck-api/internal/domain/auth"
 	"eclaim-workshop-deck-api/internal/domain/authdemo"
+	"eclaim-workshop-deck-api/internal/domain/panels"
 	"eclaim-workshop-deck-api/internal/domain/posts"
 	"eclaim-workshop-deck-api/internal/middleware"
-	"eclaim-workshop-deck-api/internal/migrations"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -21,7 +21,7 @@ func main() {
 	db := config.ConnectDB(cfg)
 
 	// Run migrations
-	migrations.Run(db)
+	// migrations.Run(db)
 
 	// Init domains
 	domains := bootstrap.InitDomains(db, cfg)
@@ -38,6 +38,7 @@ func main() {
 	authdemo.RegisterRoutes(api, domains.AuthDemoHandler, authMiddleware)
 	posts.RegisterRoutes(api, domains.PostsHandler, authMiddleware)
 	auth.RegisterRoutes(api, domains.AuthHandler, authMiddleware)
+	panels.RegisterRoutes(api, domains.PanelsHandler, authMiddleware)
 
 	// Start server
 	log.Printf("Server starting on port %s", cfg.Port)

@@ -4,7 +4,7 @@ import "time"
 
 type Panel struct {
 	PanelNo        uint      `gorm:"primaryKey;column:panel_no;type:int(11);autoIncrement" json:"panel_no"`
-	PanelName      uint      `gorm:"type:varchar(255);not null;column:panel_name" json:"panel_name"`
+	PanelName      string    `gorm:"type:varchar(255);not null;column:panel_name" json:"panel_name"`
 	IsLocked       bool      `gorm:"column:is_locked;type:tinyint(1);not null;default:0" json:"is_locked"`
 	CreatedBy      *uint     `gorm:"column:created_by;type:int(11);null" json:"created_by"`
 	CreatedAt      time.Time `gorm:"column:created_date;type:datetime;default:CURRENT_TIMESTAMP" json:"created_date"`
