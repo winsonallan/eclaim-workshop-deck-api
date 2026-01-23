@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"eclaim-workshop-deck-api/internal/domain/auth"
+	"eclaim-workshop-deck-api/internal/models"
 	"net/http"
 	"time"
 
@@ -12,7 +12,7 @@ import (
 func APIKeyMiddleware(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		apiKey := c.GetHeader("X-API-Key")
-		
+
 		if apiKey == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "API key required"})
 			c.Abort()
@@ -20,7 +20,7 @@ func APIKeyMiddleware(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		// Validate API key in database
-		var key auth.APIKey
+		var key models.APIKey
 		if err := db.Where("api_key = ? AND is_active = ?", apiKey, true).First(&key).Error; err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid API key"})
 			c.Abort()
@@ -37,7 +37,7 @@ func APIKeyMiddleware(db *gorm.DB) gin.HandlerFunc {
 		// Store API key info in context for logging/analytics
 		c.Set("api_key_name", key.Name)
 		c.Set("api_key_no", key.ApiKeyNo)
-		
+
 		c.Next()
 	}
 }

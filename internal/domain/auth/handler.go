@@ -3,6 +3,7 @@ package auth
 import (
 	"crypto/rand"
 	"eclaim-workshop-deck-api/internal/common/response"
+	"eclaim-workshop-deck-api/internal/models"
 	"encoding/hex"
 	"net/http"
 	"time"
@@ -38,7 +39,7 @@ func (h *Handler) Register(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, AuthResponse{
-		User:  *user,
+		User:  user,
 		Token: token,
 	})
 }
@@ -57,7 +58,7 @@ func (h *Handler) Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, AuthResponse{
-		User:  *user,
+		User:  user,
 		Token: token,
 	})
 }
@@ -116,7 +117,7 @@ func (h *Handler) GenerateAPIKey(c *gin.Context) {
 		expiresAt = &expiry
 	}
 
-	key := &APIKey{
+	key := &models.APIKey{
 		Key:         apiKey,
 		Name:        req.Name,
 		Description: req.Description,

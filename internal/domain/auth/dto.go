@@ -1,5 +1,7 @@
 package auth
 
+import "eclaim-workshop-deck-api/internal/models"
+
 type RegisterRequest struct {
 	UserProfileNo uint   `json:"user_profile_no"`
 	RoleNo        uint   `json:"role_no" binding:"required"`
@@ -27,6 +29,6 @@ type ChangePasswordRequest struct {
 }
 
 type AuthResponse struct {
-	User  User   `json:"user"`
-	Token string `json:"token"`
+	User  *models.User `json:"user"`
+	Token string       `json:"token"`
 }
