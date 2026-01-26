@@ -2,10 +2,12 @@ package bootstrap
 
 import (
 	"eclaim-workshop-deck-api/internal/config"
+	"eclaim-workshop-deck-api/internal/domain/admin"
 	"eclaim-workshop-deck-api/internal/domain/auth"
 	"eclaim-workshop-deck-api/internal/domain/authdemo"
 	"eclaim-workshop-deck-api/internal/domain/panels"
 	"eclaim-workshop-deck-api/internal/domain/posts"
+	"eclaim-workshop-deck-api/internal/domain/settings"
 
 	"gorm.io/gorm"
 )
@@ -14,7 +16,9 @@ type Domains struct {
 	AuthDemoHandler *authdemo.Handler
 	PostsHandler    *posts.Handler
 	AuthHandler     *auth.Handler
+	AdminsHandler   *admin.Handler
 	PanelsHandler   *panels.Handler
+	SettingsHandler *settings.Handler
 }
 
 func InitDomains(db *gorm.DB, cfg *config.Config) *Domains {
@@ -33,15 +37,26 @@ func InitDomains(db *gorm.DB, cfg *config.Config) *Domains {
 	authService := auth.NewService(authRepo, cfg.JWTSecret)
 	authHandler := auth.NewHandler(authService)
 
+	adminsRepo := admin.NewRepository(db)
+	adminsService := admin.NewService(adminsRepo)
+	adminsHandler := admin.NewHandler(adminsService)
+
 	// Panels
 	panelsRepo := panels.NewRepository(db)
 	panelsService := panels.NewService(panelsRepo)
 	panelsHandler := panels.NewHandler(panelsService)
 
+	// Settings
+	settingsRepo := settings.NewRepository(db)
+	settingsService := settings.NewService(settingsRepo)
+	settingsHandler := settings.NewHandler(settingsService)
+
 	return &Domains{
 		AuthDemoHandler: authDemoHandler,
 		PostsHandler:    postsHandler,
 		AuthHandler:     authHandler,
+		AdminsHandler:   adminsHandler,
 		PanelsHandler:   panelsHandler,
+		SettingsHandler: settingsHandler,
 	}
 }

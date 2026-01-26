@@ -1,15 +1,11 @@
-package settings
+package admin
 
 import "github.com/gin-gonic/gin"
 
 func RegisterRoutes(router *gin.RouterGroup, handler *Handler, authMiddleware gin.HandlerFunc) {
-	user := router.Group("/user")
-	{
-		user.GET("/:id", authMiddleware, handler.GetAccount)
-	}
 
 	userProfile := router.Group("/user-profile")
 	{
-		userProfile.GET("/:id", authMiddleware, handler.GetProfileDetails)
+		userProfile.POST("", authMiddleware, handler.CreateUserProfile)
 	}
 }
