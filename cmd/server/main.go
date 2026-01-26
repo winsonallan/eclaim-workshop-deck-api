@@ -22,9 +22,6 @@ func main() {
 	// Connect DB
 	db := config.ConnectDB(cfg)
 
-	// Run migrations
-	// migrations.Run(db)
-
 	// Init domains
 	domains := bootstrap.InitDomains(db, cfg)
 

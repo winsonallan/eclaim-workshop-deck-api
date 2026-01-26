@@ -29,3 +29,11 @@ func (r *Repository) GetProfileDetails(id uint) ([]models.UserProfile, error) {
 
 	return profile, err
 }
+
+func (r *Repository) GetWorkshopDetails(id uint) ([]models.WorkshopDetails, error) {
+	var workshopDetails []models.WorkshopDetails
+
+	err := r.db.Where("is_locked = ?", 0).Where("workshop_details_no", 1).Find(&workshopDetails).Error
+
+	return workshopDetails, err
+}

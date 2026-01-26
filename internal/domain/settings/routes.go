@@ -12,4 +12,9 @@ func RegisterRoutes(router *gin.RouterGroup, handler *Handler, authMiddleware gi
 	{
 		userProfile.GET("/:id", authMiddleware, handler.GetProfileDetails)
 	}
+
+	workshopDetails := router.Group("/workshop")
+	{
+		workshopDetails.GET("/:id", authMiddleware, handler.GetWorkshopDetails)
+	}
 }

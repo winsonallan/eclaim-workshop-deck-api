@@ -21,3 +21,7 @@ func (s *Service) GetAccount(id uint) ([]models.User, error) {
 func (s *Service) GetProfileDetails(id uint) ([]models.UserProfile, error) {
 	return s.repo.GetProfileDetails(id)
 }
+
+func (s *Service) GetWorkshopDetails(id uint) ([]models.WorkshopDetails, error) {
+	return s.repo.GetWorkshopDetails(id)
+}
