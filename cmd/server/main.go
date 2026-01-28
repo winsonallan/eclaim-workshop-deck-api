@@ -6,6 +6,7 @@ import (
 	"eclaim-workshop-deck-api/internal/domain/admin"
 	"eclaim-workshop-deck-api/internal/domain/auth"
 	"eclaim-workshop-deck-api/internal/domain/authdemo"
+	"eclaim-workshop-deck-api/internal/domain/location"
 	"eclaim-workshop-deck-api/internal/domain/panels"
 	"eclaim-workshop-deck-api/internal/domain/posts"
 	"eclaim-workshop-deck-api/internal/domain/settings"
@@ -42,6 +43,7 @@ func main() {
 
 	panels.RegisterRoutes(api, domains.PanelsHandler, authMiddleware)
 	settings.RegisterRoutes(api, domains.SettingsHandler, authMiddleware)
+	location.RegisterRoutes(api, domains.LocationHandler, authMiddleware)
 
 	// Start server
 	log.Printf("Server starting on port %s", cfg.Port)

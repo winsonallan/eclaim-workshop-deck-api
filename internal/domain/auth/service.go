@@ -119,3 +119,48 @@ func (s *Service) ChangePassword(req ChangePasswordRequest) (*models.User, error
 
 	return user, nil
 }
+
+func (s *Service) UpdateAccount(req UpdateAccountRequest) (*models.User, error) {
+	userNo := req.UserNo
+
+	user, err := s.repo.FindByUserNo(userNo)
+	if err != nil {
+		return nil, errors.New("user not found")
+	}
+
+	if req.UserNo != user.UserNo {
+		return nil, errors.New("unauthorized: you can only update your own account")
+	}
+
+	if req.Password != "" {
+		if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+			return nil, errors.New("invalid old password")
+		}
+	}
+
+	if req.NewPassword != req.ConfirmPassword {
+		return nil, errors.New("new password and confirmation do not match")
+	}
+
+	hashedNewPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+
+	user.Password = string(hashedNewPassword)
+	user.LastModifiedBy = &user.UserNo
+
+	if req.Email != "" {
+		user.Email = req.Email
+	}
+
+	if req.Username != "" {
+		user.UserId = req.Username
+	}
+
+	if err := s.repo.UpdateAccount(user); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}

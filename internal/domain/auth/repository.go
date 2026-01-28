@@ -21,7 +21,13 @@ func (r *Repository) Create(user *models.User) error {
 
 func (r *Repository) FindByEmail(email string) (*models.User, error) {
 	var user models.User
-	err := r.db.Where("email = ?", email).First(&user).Error
+	err := r.db.Preload("UserProfile").Where("email = ?", email).First(&user).Error
+	return &user, err
+}
+
+func (r *Repository) FindByUserNo(id uint) (*models.User, error) {
+	var user models.User
+	err := r.db.Preload("UserProfile").Where("user_no = ?", id).First(&user).Error
 	return &user, err
 }
 
@@ -33,4 +39,8 @@ func (r *Repository) ChangePassword(user *models.User) error {
 			"last_modified_by":   user.LastModifiedBy,
 			"last_modified_date": time.Now(), // if you use GORM timestamps
 		}).Error
+}
+
+func (r *Repository) UpdateAccount(user *models.User) error {
+	return r.db.Save(user).Error
 }

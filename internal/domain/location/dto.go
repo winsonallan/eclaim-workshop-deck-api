@@ -1,4 +1,4 @@
-package auth
+package location
 
 import "eclaim-workshop-deck-api/internal/models"
 

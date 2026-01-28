@@ -5,6 +5,7 @@ import (
 	"eclaim-workshop-deck-api/internal/domain/admin"
 	"eclaim-workshop-deck-api/internal/domain/auth"
 	"eclaim-workshop-deck-api/internal/domain/authdemo"
+	"eclaim-workshop-deck-api/internal/domain/location"
 	"eclaim-workshop-deck-api/internal/domain/panels"
 	"eclaim-workshop-deck-api/internal/domain/posts"
 	"eclaim-workshop-deck-api/internal/domain/settings"
@@ -19,6 +20,7 @@ type Domains struct {
 	AdminsHandler   *admin.Handler
 	PanelsHandler   *panels.Handler
 	SettingsHandler *settings.Handler
+	LocationHandler *location.Handler
 }
 
 func InitDomains(db *gorm.DB, cfg *config.Config) *Domains {
@@ -51,6 +53,11 @@ func InitDomains(db *gorm.DB, cfg *config.Config) *Domains {
 	settingsService := settings.NewService(settingsRepo)
 	settingsHandler := settings.NewHandler(settingsService)
 
+	// Location
+	locationRepo := location.NewRepository(db)
+	locationService := location.NewService(locationRepo)
+	locationHandler := location.NewHandler(locationService)
+
 	return &Domains{
 		AuthDemoHandler: authDemoHandler,
 		PostsHandler:    postsHandler,
@@ -58,5 +65,6 @@ func InitDomains(db *gorm.DB, cfg *config.Config) *Domains {
 		AdminsHandler:   adminsHandler,
 		PanelsHandler:   panelsHandler,
 		SettingsHandler: settingsHandler,
+		LocationHandler: locationHandler,
 	}
 }

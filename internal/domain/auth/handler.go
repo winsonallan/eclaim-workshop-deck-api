@@ -18,7 +18,7 @@ type Handler struct {
 type GenerateAPIKeyRequest struct {
 	Name        string `json:"name" binding:"required"`
 	Description string `json:"description"`
-	ExpiresIn   int    `json:"expires_in_days"` // Optional: days until expiration (0 = never)
+	ExpiresIn   int    `json:"expires_in_days"`
 }
 
 func NewHandler(service *Service) *Handler {
@@ -94,7 +94,22 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 	} else {
 		response.Success(c, http.StatusOK, "Password Changed Successfully", user)
 	}
+}
 
+func (h *Handler) UpdateAccount(c *gin.Context) {
+	var req UpdateAccountRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	user, err := h.service.UpdateAccount(req)
+
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+	} else {
+		response.Success(c, http.StatusOK, "Account Changed Successfully", user)
+	}
 }
 
 func (h *Handler) GenerateAPIKey(c *gin.Context) {
