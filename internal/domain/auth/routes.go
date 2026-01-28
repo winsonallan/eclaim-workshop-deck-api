@@ -8,12 +8,11 @@ func RegisterRoutes(router *gin.RouterGroup, handler *Handler, authMiddleware gi
 		// Public routes
 		auth.POST("/register", handler.Register)
 		auth.POST("/login", handler.Login)
-
+		auth.POST("/refresh", handler.RefreshToken)
 		auth.GET("/get-user-by-email", handler.GetUserByEmail)
-
-		// Admin only - Generate API keys (you can add admin check later)
 		auth.POST("/generate-api-key", handler.GenerateAPIKey)
 
+		// Protected routes
 		auth.Use(authMiddleware)
 		{
 			auth.POST("/change-password", handler.ChangePassword)

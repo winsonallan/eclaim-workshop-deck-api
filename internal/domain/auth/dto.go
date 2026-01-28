@@ -38,6 +38,13 @@ type UpdateAccountRequest struct {
 }
 
 type AuthResponse struct {
-	User  *models.User `json:"user"`
-	Token string       `json:"token"`
+	User         *models.User `json:"user"`
+	AccessToken  string       `json:"access_token"`
+	RefreshToken string       `json:"refresh_token"`
+	TokenType    string       `json:"token_type"`
+	ExpiresIn    int          `json:"expires_in"` // in seconds
+}
+
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
 }

@@ -25,6 +25,7 @@ func NewHandler(service *Service) *Handler {
 	return &Handler{service: service}
 }
 
+// Register - updated to return both tokens
 func (h *Handler) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -32,18 +33,22 @@ func (h *Handler) Register(c *gin.Context) {
 		return
 	}
 
-	user, token, err := h.service.Register(req)
+	user, accessToken, refreshToken, err := h.service.Register(req)
 	if err != nil {
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	c.JSON(http.StatusCreated, AuthResponse{
-		User:  user,
-		Token: token,
+		User:         user,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		TokenType:    "Bearer",
+		ExpiresIn:    900, // 15 minutes in seconds
 	})
 }
 
+// Login - updated to return both tokens
 func (h *Handler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -51,18 +56,44 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	user, token, err := h.service.Login(req)
+	user, accessToken, refreshToken, err := h.service.Login(req)
 	if err != nil {
 		response.Error(c, http.StatusUnauthorized, err.Error())
 		return
 	}
 
 	c.JSON(http.StatusOK, AuthResponse{
-		User:  user,
-		Token: token,
+		User:         user,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		TokenType:    "Bearer",
+		ExpiresIn:    900, // 15 minutes in seconds
 	})
 }
 
+// NEW: RefreshToken handler
+func (h *Handler) RefreshToken(c *gin.Context) {
+	var req RefreshTokenRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	newAccessToken, newRefreshToken, err := h.service.RefreshToken(req)
+	if err != nil {
+		response.Error(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"access_token":  newAccessToken,
+		"refresh_token": newRefreshToken,
+		"token_type":    "Bearer",
+		"expires_in":    900, // 15 minutes in seconds
+	})
+}
+
+// Keep all your other handlers unchanged...
 func (h *Handler) GetUserByEmail(c *gin.Context) {
 	var req FindByEmailRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -71,7 +102,6 @@ func (h *Handler) GetUserByEmail(c *gin.Context) {
 	}
 
 	user, err := h.service.GetUserByEmail(req)
-
 	if err != nil {
 		response.Error(c, http.StatusNotFound, "User with that email is not found")
 		return
@@ -88,7 +118,6 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 	}
 
 	user, err := h.service.ChangePassword(req)
-
 	if err != nil {
 		response.Error(c, http.StatusBadRequest, err.Error())
 	} else {
@@ -104,7 +133,6 @@ func (h *Handler) UpdateAccount(c *gin.Context) {
 	}
 
 	user, err := h.service.UpdateAccount(req)
-
 	if err != nil {
 		response.Error(c, http.StatusBadRequest, err.Error())
 	} else {
@@ -119,8 +147,7 @@ func (h *Handler) GenerateAPIKey(c *gin.Context) {
 		return
 	}
 
-	// Generate random API key
-	apiKey, err := generateRandomKey(32) // 32 bytes = 64 hex characters
+	apiKey, err := generateRandomKey(32)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, "Failed to generate API key")
 		return
@@ -157,7 +184,6 @@ func (h *Handler) GenerateAPIKey(c *gin.Context) {
 	})
 }
 
-// Generate cryptographically secure random key
 func generateRandomKey(length int) (string, error) {
 	bytes := make([]byte, length)
 	if _, err := rand.Read(bytes); err != nil {

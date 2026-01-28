@@ -20,17 +20,18 @@ func NewService(repo *Repository, jwtSecret string) *Service {
 	}
 }
 
-func (s *Service) Register(req RegisterRequest) (*models.User, string, error) {
+// Register - now returns both tokens
+func (s *Service) Register(req RegisterRequest) (*models.User, string, string, error) {
 	// Check if user exists
 	_, err := s.repo.FindByEmail(req.Email)
 	if err == nil {
-		return nil, "", errors.New("user already exists")
+		return nil, "", "", errors.New("user already exists")
 	}
 
 	// Hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, "", err
+		return nil, "", "", err
 	}
 
 	// Create user
@@ -43,51 +44,92 @@ func (s *Service) Register(req RegisterRequest) (*models.User, string, error) {
 	}
 
 	if err := s.repo.Create(user); err != nil {
-		return nil, "", err
+		return nil, "", "", err
 	}
 
-	// Generate token
-	token, err := utils.GenerateToken(user.UserNo, user.Email, s.jwtSecret)
+	// Generate access token
+	accessToken, err := utils.GenerateToken(user.UserNo, s.jwtSecret)
 	if err != nil {
-		return nil, "", err
+		return nil, "", "", err
 	}
 
-	return user, token, nil
+	// Generate refresh token
+	refreshToken, err := utils.GenerateRefreshToken(user.UserNo, s.jwtSecret)
+	if err != nil {
+		return nil, "", "", err
+	}
+
+	return user, accessToken, refreshToken, nil
 }
 
-func (s *Service) Login(req LoginRequest) (*models.User, string, error) {
+// Login - now returns both tokens
+func (s *Service) Login(req LoginRequest) (*models.User, string, string, error) {
 	// Find user
 	user, err := s.repo.FindByEmail(req.Email)
 	if err != nil {
-		return nil, "", errors.New("invalid credentials")
+		return nil, "", "", errors.New("invalid credentials")
 	}
 
 	// Check password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		return nil, "", errors.New("invalid credentials")
+		return nil, "", "", errors.New("invalid credentials")
 	}
 
-	// Generate token
-	token, err := utils.GenerateToken(user.UserNo, user.Email, s.jwtSecret)
+	// Generate access token
+	accessToken, err := utils.GenerateToken(user.UserNo, s.jwtSecret)
 	if err != nil {
-		return nil, "", err
+		return nil, "", "", err
 	}
 
-	return user, token, nil
+	// Generate refresh token
+	refreshToken, err := utils.GenerateRefreshToken(user.UserNo, s.jwtSecret)
+	if err != nil {
+		return nil, "", "", err
+	}
+
+	return user, accessToken, refreshToken, nil
 }
 
+// NEW: RefreshToken service method
+func (s *Service) RefreshToken(req RefreshTokenRequest) (string, string, error) {
+	// Validate refresh token
+	claims, err := utils.ValidateToken(req.RefreshToken, s.jwtSecret)
+	if err != nil {
+		return "", "", errors.New("invalid or expired refresh token")
+	}
+
+	// Verify user still exists
+	_, err = s.repo.FindByUserNo(claims.UserNo)
+	if err != nil {
+		return "", "", errors.New("user not found")
+	}
+
+	// Generate new access token
+	newAccessToken, err := utils.GenerateToken(claims.UserNo, s.jwtSecret)
+	if err != nil {
+		return "", "", err
+	}
+
+	// Generate new refresh token (refresh token rotation - more secure)
+	newRefreshToken, err := utils.GenerateRefreshToken(claims.UserNo, s.jwtSecret)
+	if err != nil {
+		return "", "", err
+	}
+
+	return newAccessToken, newRefreshToken, nil
+}
+
+// Keep your other methods as they are...
 func (s *Service) GetUserByEmail(req FindByEmailRequest) (*models.User, error) {
 	user, err := s.repo.FindByEmail(req.Email)
 	if err != nil {
 		return nil, errors.New("User with that email not found!")
 	}
-
 	return user, nil
 }
 
 func (s *Service) ChangePassword(req ChangePasswordRequest) (*models.User, error) {
 	user, err := s.repo.FindByEmail(req.Email)
-
 	if err != nil {
 		return nil, errors.New("User with that email not found!")
 	}
@@ -104,7 +146,6 @@ func (s *Service) ChangePassword(req ChangePasswordRequest) (*models.User, error
 		return nil, errors.New("new password and confirmation do not match")
 	}
 
-	// ✅ Hash new password before saving
 	hashedNewPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
