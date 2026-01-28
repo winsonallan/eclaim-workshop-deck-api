@@ -120,17 +120,74 @@ func (h *Handler) CreateWorkshopPIC(c *gin.Context) {
 }
 
 func (h *Handler) UpdateWorkshopDetails(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid workshop details ID")
+		return
+	}
+
 	var req UpdateWorkshopDetailsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	user, err := h.service.UpdateWorkshopDetails(req)
+	user, err := h.service.UpdateWorkshopDetails(uint(id), req)
 
 	if err != nil {
 		response.Error(c, http.StatusBadRequest, err.Error())
 	} else {
 		response.Success(c, http.StatusOK, "Workshop Details Changed Successfully", user)
+	}
+}
+
+func (h *Handler) UpdateWorkshopPIC(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid workshop pic ID")
+		return
+	}
+
+	var req UpdateWorkshopPICRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	pic, err := h.service.UpdateWorkshopPIC(uint(id), req)
+
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+	} else {
+		response.Success(c, http.StatusOK, "Workshop PIC Changed Successfully", pic)
+	}
+}
+
+// Delete
+func (h *Handler) DeleteWorkshopPIC(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid workshop pic ID")
+		return
+	}
+
+	var req DeleteWorkshopPICRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	pic, err := h.service.DeleteWorkshopPIC(uint(id), req)
+
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+	} else {
+		response.Success(c, http.StatusOK, "Workshop PIC Changed Successfully", pic)
 	}
 }

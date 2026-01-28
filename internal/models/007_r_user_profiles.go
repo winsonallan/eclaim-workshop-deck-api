@@ -9,6 +9,7 @@ type UserProfile struct {
 	UserProfileType     string    `gorm:"type:enum('workshop','insurer');not null" json:"user_profile_type"`
 	UserProfileName     string    `gorm:"type:varchar(255);not null" json:"user_profile_name"`
 	UserProfileCityNo   uint      `gorm:"type:int(11);not null;" json:"user_profile_city_no"`
+	UserProfileCityType string    `gorm:"type:enum('KAB','KOTA');not null;" json:"user_profile_city_type"`
 	UserProfileCityName string    `gorm:"type:varchar(255);not null;" json:"user_profile_city_name"`
 	UserProfileAddress  string    `gorm:"type:varchar(255);not null;" json:"user_profile_address"`
 	UserProfileEmail    string    `gorm:"type:varchar(255);" json:"user_profile_email"`

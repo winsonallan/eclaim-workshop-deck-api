@@ -92,9 +92,7 @@ func (s *Service) CreateWorkshopPIC(req CreateWorkshopPICRequest) (*models.Works
 	return s.repo.FindWorkshopPICByID(workshopPics.WorkshopPicNo)
 }
 
-func (s *Service) UpdateWorkshopDetails(req UpdateWorkshopDetailsRequest) (*models.WorkshopDetails, error) {
-	workshopDetailsNo := req.WorkshopDetailsNo
-
+func (s *Service) UpdateWorkshopDetails(workshopDetailsNo uint, req UpdateWorkshopDetailsRequest) (*models.WorkshopDetails, error) {
 	workshopDetails, err := s.repo.FindWorkshopDetailsByID(workshopDetailsNo)
 	if err != nil {
 		return nil, errors.New("workshop details not found")
@@ -114,6 +112,9 @@ func (s *Service) UpdateWorkshopDetails(req UpdateWorkshopDetailsRequest) (*mode
 		workshopDetails.Capacity = req.Capacity
 	}
 
+	if req.CityType != "" {
+		userProfile.UserProfileCityType = req.CityType
+	}
 	if req.CityName != "" {
 		userProfile.UserProfileCityName = req.CityName
 	}
@@ -150,4 +151,55 @@ func (s *Service) UpdateWorkshopDetails(req UpdateWorkshopDetailsRequest) (*mode
 	}
 
 	return workshopDetails, nil
+}
+
+func (s *Service) UpdateWorkshopPIC(workshopPICNo uint, req UpdateWorkshopPICRequest) (*models.WorkshopPics, error) {
+
+	workshopPIC, err := s.repo.FindWorkshopPICByID(workshopPICNo)
+
+	if err != nil {
+		return nil, errors.New("workshop PIC not found")
+	}
+
+	if req.WorkshopPicName != "" {
+		workshopPIC.WorkshopPicName = req.WorkshopPicName
+	}
+
+	if req.WorkshopPicTitle != "" {
+		workshopPIC.WorkshopPicTitle = req.WorkshopPicTitle
+	}
+
+	if req.Phone != "" {
+		workshopPIC.Phone = req.Phone
+	}
+
+	if req.Email != "" {
+		workshopPIC.Email = req.Email
+	}
+
+	workshopPIC.LastModifiedBy = &req.LastModifiedBy
+
+	if err := s.repo.UpdateWorkshopPIC(workshopPIC); err != nil {
+		return nil, err
+	}
+
+	return workshopPIC, nil
+}
+
+// Delete
+func (s *Service) DeleteWorkshopPIC(workshopPICNo uint, req DeleteWorkshopPICRequest) (*models.WorkshopPics, error) {
+	workshopPIC, err := s.repo.FindWorkshopPICByID(workshopPICNo)
+
+	if err != nil {
+		return nil, errors.New("workshop PIC not found")
+	}
+
+	workshopPIC.IsLocked = true
+	workshopPIC.LastModifiedBy = &req.LastModifiedBy
+
+	if err := s.repo.UpdateWorkshopPIC(workshopPIC); err != nil {
+		return nil, err
+	}
+
+	return workshopPIC, nil
 }

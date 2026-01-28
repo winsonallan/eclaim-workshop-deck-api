@@ -89,3 +89,7 @@ func (r *Repository) UpdateWorkshopDetails(workshopDetails *models.WorkshopDetai
 func (r *Repository) UpdateUserProfile(userProfile *models.UserProfile) error {
 	return r.db.Save(userProfile).Error
 }
+
+func (r *Repository) UpdateWorkshopPIC(workshopPIC *models.WorkshopPics) error {
+	return r.db.Save(workshopPIC).Error
+}

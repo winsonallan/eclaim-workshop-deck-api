@@ -25,11 +25,12 @@ func RegisterRoutes(router *gin.RouterGroup, handler *Handler, authMiddleware gi
 		{
 			workshopDetails.GET("/:id", handler.GetWorkshopDetails)
 			workshopDetails.POST("", handler.CreateWorkshopDetails)
+			workshopDetails.PUT("/:id", handler.UpdateWorkshopDetails)
 
 			workshopDetails.GET("/pic/:id", handler.GetWorkshopPICs)
 			workshopDetails.POST("/pic", handler.CreateWorkshopPIC)
-
-			workshopDetails.PUT("/:id", handler.UpdateWorkshopDetails)
+			workshopDetails.PUT("/pic/:id", handler.UpdateWorkshopPIC)
+			workshopDetails.DELETE("/pic/:id", handler.DeleteWorkshopPIC)
 		}
 	}
 
