@@ -3,6 +3,7 @@ package auth
 import (
 	"crypto/rand"
 	"eclaim-workshop-deck-api/internal/common/response"
+	"eclaim-workshop-deck-api/internal/domain/settings"
 	"eclaim-workshop-deck-api/internal/models"
 	"encoding/hex"
 	"net/http"
@@ -62,13 +63,41 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, AuthResponse{
-		User:         user,
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		TokenType:    "Bearer",
-		ExpiresIn:    900, // 15 minutes in seconds
-	})
+	userProfileNo := user.UserProfileNo
+
+	if userProfileNo != nil {
+		settingsRepo := settings.NewRepository(h.service.repo.db)
+		settingsService := settings.NewService(settingsRepo)
+
+		workshopDetails, err := settingsService.GetWorkshopDetailsFromUserProfileNo(*userProfileNo)
+		if err != nil {
+			c.JSON(http.StatusOK, AuthResponse{
+				User:         user,
+				AccessToken:  accessToken,
+				RefreshToken: refreshToken,
+				TokenType:    "Bearer",
+				ExpiresIn:    900,
+			})
+		} else {
+			c.JSON(http.StatusOK, AuthResponse{
+				User:            user,
+				WorkshopDetails: workshopDetails,
+				AccessToken:     accessToken,
+				RefreshToken:    refreshToken,
+				TokenType:       "Bearer",
+				ExpiresIn:       900,
+			})
+		}
+	} else {
+		c.JSON(http.StatusOK, AuthResponse{
+			User:         user,
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+			TokenType:    "Bearer",
+			ExpiresIn:    900, // 15 minutes in seconds
+		})
+	}
+
 }
 
 // NEW: RefreshToken handler

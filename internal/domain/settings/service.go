@@ -23,12 +23,16 @@ func (s *Service) GetProfileDetails(id uint) (*models.UserProfile, error) {
 	return s.repo.GetProfileDetails(id)
 }
 
-func (s *Service) GetWorkshopDetails(id uint) ([]models.WorkshopDetails, error) {
+func (s *Service) GetWorkshopDetails(id uint) (models.WorkshopDetails, error) {
 	return s.repo.GetWorkshopDetails(id)
 }
 
 func (s *Service) GetWorkshopPICs(id uint) ([]models.WorkshopPics, error) {
 	return s.repo.GetWorkshopPICs(id)
+}
+
+func (s *Service) GetWorkshopDetailsFromUserProfileNo(uProfileId uint) (*models.WorkshopDetails, error) {
+	return s.repo.GetWorkshopDetailsFromUserProfileNo(uProfileId)
 }
 
 func (s *Service) CreateWorkshopDetails(req CreateWorkshopDetailsRequest) (*models.WorkshopDetails, error) {

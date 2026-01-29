@@ -9,6 +9,7 @@ type RegisterRequest struct {
 	UserId        string `json:"user_id" binding:"required"`
 	Email         string `json:"email" binding:"required,email"`
 	Password      string `json:"password" binding:"required,min=6"`
+	CreatedBy     uint   `json:"created_by" binding:"required"`
 }
 
 type LoginRequest struct {
@@ -38,11 +39,12 @@ type UpdateAccountRequest struct {
 }
 
 type AuthResponse struct {
-	User         *models.User `json:"user"`
-	AccessToken  string       `json:"access_token"`
-	RefreshToken string       `json:"refresh_token"`
-	TokenType    string       `json:"token_type"`
-	ExpiresIn    int          `json:"expires_in"` // in seconds
+	User            *models.User            `json:"user"`
+	WorkshopDetails *models.WorkshopDetails `json:"workshop_details"`
+	AccessToken     string                  `json:"access_token"`
+	RefreshToken    string                  `json:"refresh_token"`
+	TokenType       string                  `json:"token_type"`
+	ExpiresIn       int                     `json:"expires_in"` // in seconds
 }
 
 type RefreshTokenRequest struct {

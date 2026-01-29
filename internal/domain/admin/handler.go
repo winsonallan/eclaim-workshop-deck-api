@@ -23,6 +23,7 @@ func (h *Handler) CreateUserProfile(c *gin.Context) {
 	}
 
 	userProfile, err := h.service.CreateUserProfile(req)
+
 	if err != nil {
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return

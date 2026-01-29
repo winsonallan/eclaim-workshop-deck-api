@@ -23,6 +23,7 @@ func main() {
 	// Connect DB
 	db := config.ConnectDB(cfg)
 
+	db.Debug()
 	// Init domains
 	domains := bootstrap.InitDomains(db, cfg)
 

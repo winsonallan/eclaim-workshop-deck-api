@@ -36,13 +36,17 @@ func (s *Service) Register(req RegisterRequest) (*models.User, string, string, e
 
 	// Create user
 	user := &models.User{
-		RoleNo:   req.RoleNo,
-		UserName: req.Name,
-		UserId:   req.UserId,
-		Email:    req.Email,
-		Password: string(hashedPassword),
+		RoleNo:    req.RoleNo,
+		UserName:  req.Name,
+		UserId:    req.UserId,
+		Email:     req.Email,
+		Password:  string(hashedPassword),
+		CreatedBy: &req.CreatedBy,
 	}
 
+	if req.UserProfileNo != 0 {
+		user.UserProfileNo = &req.UserProfileNo
+	}
 	if err := s.repo.Create(user); err != nil {
 		return nil, "", "", err
 	}

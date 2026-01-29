@@ -31,10 +31,16 @@ func (r *Repository) GetProfileDetails(id uint) (*models.UserProfile, error) {
 	return profile, err
 }
 
-func (r *Repository) GetWorkshopDetails(id uint) ([]models.WorkshopDetails, error) {
-	var workshopDetails []models.WorkshopDetails
+func (r *Repository) GetWorkshopDetails(id uint) (models.WorkshopDetails, error) {
+	var workshopDetails models.WorkshopDetails
 
-	err := r.db.Where("is_locked = ?", 0).Where("workshop_details_no", id).Find(&workshopDetails).Error
+	err := r.db.
+		Preload("UserProfile").
+		Preload("CreatedByUser").
+		Preload("LastModifiedByUser").
+		Where("is_locked = ?", 0).
+		Where("workshop_details_no", id).
+		First(&workshopDetails).Error
 
 	return workshopDetails, err
 }
@@ -47,6 +53,18 @@ func (r *Repository) GetWorkshopPICs(id uint) ([]models.WorkshopPics, error) {
 	return workshopPics, err
 }
 
+func (r *Repository) GetWorkshopDetailsFromUserProfileNo(id uint) (*models.WorkshopDetails, error) {
+	var details models.WorkshopDetails
+	if err := r.db.
+		Preload("UserProfile").
+		Preload("CreatedByUser").
+		Preload("LastModifiedByUser").
+		Where("is_locked = ?", 0).
+		First(&details, "user_profile_no = ?", id).Error; err != nil {
+		return nil, err
+	}
+	return &details, nil
+}
 func (r *Repository) FindWorkshopDetailsByID(id uint) (*models.WorkshopDetails, error) {
 	var details models.WorkshopDetails
 	if err := r.db.

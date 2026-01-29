@@ -55,11 +55,29 @@ func (h *Handler) GetWorkshopDetails(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)
 	if err != nil {
-		response.Error(c, http.StatusBadRequest, "Invalid post ID")
+		response.Error(c, http.StatusBadRequest, "Invalid workshop details no")
 		return
 	}
 
 	workshopDetails, err := h.service.GetWorkshopDetails(uint(id))
+
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Workshop Details Retrieved Successfully", gin.H{"workshop_details": workshopDetails})
+}
+
+func (h *Handler) GetWorkshopDetailsFromUserProfileNo(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid workshop details no")
+		return
+	}
+
+	workshopDetails, err := h.service.GetWorkshopDetailsFromUserProfileNo(uint(id))
 
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error())
