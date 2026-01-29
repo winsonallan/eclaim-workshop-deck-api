@@ -21,7 +21,7 @@ func GenerateToken(userNo uint, secret string) (string, error) {
 			ExpiresAt: jwt.NewNumericDate(now.Add(15 * time.Minute)), // Shorter expiry
 			IssuedAt:  jwt.NewNumericDate(now),
 			NotBefore: jwt.NewNumericDate(now), // Token valid from now
-			Issuer:    "your-app-name",         // Optional but recommended
+			Issuer:    "workshop-deck",         // Optional but recommended
 		},
 	}
 
@@ -38,7 +38,7 @@ func GenerateRefreshToken(userNo uint, secret string) (string, error) {
 			ExpiresAt: jwt.NewNumericDate(now.Add(7 * 24 * time.Hour)), // 7 days
 			IssuedAt:  jwt.NewNumericDate(now),
 			NotBefore: jwt.NewNumericDate(now),
-			Issuer:    "your-app-name",
+			Issuer:    "workshop-deck",
 		},
 	}
 
