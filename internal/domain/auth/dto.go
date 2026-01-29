@@ -50,3 +50,8 @@ type AuthResponse struct {
 type RefreshTokenRequest struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
 }
+
+type ResetPasswordRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Username string `json:"username" binding:"required"`
+}

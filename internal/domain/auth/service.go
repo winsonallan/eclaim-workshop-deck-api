@@ -1,11 +1,19 @@
 package auth
 
 import (
+	"bytes"
+	"crypto/rand"
+	"eclaim-workshop-deck-api/internal/config"
 	"eclaim-workshop-deck-api/internal/models"
 	"eclaim-workshop-deck-api/pkg/utils"
+	"encoding/base64"
 	"errors"
+	"fmt"
+	"text/template"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
+	"gopkg.in/gomail.v2"
 )
 
 type Service struct {
@@ -20,7 +28,6 @@ func NewService(repo *Repository, jwtSecret string) *Service {
 	}
 }
 
-// Register - now returns both tokens
 func (s *Service) Register(req RegisterRequest) (*models.User, string, string, error) {
 	// Check if user exists
 	_, err := s.repo.FindByEmail(req.Email)
@@ -66,7 +73,6 @@ func (s *Service) Register(req RegisterRequest) (*models.User, string, string, e
 	return user, accessToken, refreshToken, nil
 }
 
-// Login - now returns both tokens
 func (s *Service) Login(req LoginRequest) (*models.User, string, string, error) {
 	// Find user
 	user, err := s.repo.FindByEmail(req.Email)
@@ -94,7 +100,6 @@ func (s *Service) Login(req LoginRequest) (*models.User, string, string, error) 
 	return user, accessToken, refreshToken, nil
 }
 
-// NEW: RefreshToken service method
 func (s *Service) RefreshToken(req RefreshTokenRequest) (string, string, error) {
 	// Validate refresh token
 	claims, err := utils.ValidateToken(req.RefreshToken, s.jwtSecret)
@@ -123,7 +128,6 @@ func (s *Service) RefreshToken(req RefreshTokenRequest) (string, string, error) 
 	return newAccessToken, newRefreshToken, nil
 }
 
-// Keep your other methods as they are...
 func (s *Service) GetUserByEmail(req FindByEmailRequest) (*models.User, error) {
 	user, err := s.repo.FindByEmail(req.Email)
 	if err != nil {
@@ -208,4 +212,77 @@ func (s *Service) UpdateAccount(req UpdateAccountRequest) (*models.User, error) 
 	}
 
 	return user, nil
+}
+
+func (s *Service) ResetPassword(req ResetPasswordRequest) error {
+	// 1. Verify user
+	user, err := s.repo.FindByEmailAndUsername(req.Email, req.Username)
+	if err != nil {
+		return fmt.Errorf("user not found")
+	}
+
+	// 2. Generate new random password
+	newPassword := generateRandomPassword(32)
+
+	// 3. Hash it
+	hashed, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("failed to hash password: %v", err)
+	}
+
+	// 4. Update user’s password in DB
+	if err := s.repo.UpdatePassword(user.UserNo, string(hashed)); err != nil {
+		return fmt.Errorf("failed to update password: %v", err)
+	}
+
+	// 5. Send email
+	if err := sendResetEmail(req.Email, req.Username, newPassword); err != nil {
+		return fmt.Errorf("failed to send email: %v", err)
+	}
+
+	return nil
+}
+
+func generateRandomPassword(length int) string {
+	b := make([]byte, length)
+	rand.Read(b)
+	return base64.URLEncoding.EncodeToString(b)[:length]
+}
+
+// helper: send email using gomail
+func sendResetEmail(to, username, newPassword string) error {
+	tmpl, err := template.ParseFiles("templates/reset_password.html")
+	if err != nil {
+		return err
+	}
+
+	data := struct {
+		Username string
+		Password string
+		Year     int
+	}{
+		Username: username,
+		Password: newPassword,
+		Year:     time.Now().Year(),
+	}
+
+	var body bytes.Buffer
+	if err := tmpl.Execute(&body, data); err != nil {
+		return err
+	}
+
+	m := gomail.NewMessage()
+	m.SetHeader("From", fmt.Sprintf("%s <%s>", config.EmailData.SMTP.Name, config.EmailData.SMTP.User))
+	m.SetHeader("To", to)
+	m.SetHeader("Subject", "Your New Password")
+	m.SetBody("text/html", body.String())
+
+	d := gomail.NewDialer(
+		config.EmailData.SMTP.Server,
+		int(config.EmailData.SMTPPort),
+		config.EmailData.SMTP.User,
+		config.EmailData.SMTP.Pass,
+	)
+
+	return d.DialAndSend(m)
 }

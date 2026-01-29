@@ -25,6 +25,23 @@ func (r *Repository) FindByEmail(email string) (*models.User, error) {
 	return &user, err
 }
 
+func (r *Repository) FindByEmailAndUsername(email, username string) (*models.User, error) {
+	var user models.User
+	err := r.db.
+		Where("email = ? AND user_id = ?", email, username).
+		Where("is_locked = ?", 0).
+		First(&user).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (r *Repository) UpdatePassword(userID uint, hashedPassword string) error {
+	return r.db.Model(&models.User{}).Where("user_no = ?", userID).Update("password", hashedPassword).Error
+}
+
 func (r *Repository) FindByUserNo(id uint) (*models.User, error) {
 	var user models.User
 	err := r.db.Preload("UserProfile").Where("user_no = ?", id).First(&user).Error

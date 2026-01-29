@@ -122,7 +122,6 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 	})
 }
 
-// Keep all your other handlers unchanged...
 func (h *Handler) GetUserByEmail(c *gin.Context) {
 	var req FindByEmailRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -211,6 +210,21 @@ func (h *Handler) GenerateAPIKey(c *gin.Context) {
 			"expires_at":  expiresAt,
 		},
 	})
+}
+
+func (h *Handler) ResetPassword(c *gin.Context) {
+	var req ResetPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if err := h.service.ResetPassword(req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "A new password has been sent to your email.", nil)
 }
 
 func generateRandomKey(length int) (string, error) {
