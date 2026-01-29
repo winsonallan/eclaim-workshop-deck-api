@@ -12,11 +12,11 @@ func RegisterRoutes(router *gin.RouterGroup, handler *Handler, authMiddleware gi
 		auth.POST("/reset-password", handler.ResetPassword)
 		auth.GET("/get-user-by-email", handler.GetUserByEmail)
 		auth.POST("/generate-api-key", handler.GenerateAPIKey)
+		auth.POST("/change-password", handler.ChangePassword)
 
 		// Protected routes
 		auth.Use(authMiddleware)
 		{
-			auth.POST("/change-password", handler.ChangePassword)
 			auth.PUT("/update", handler.UpdateAccount)
 		}
 	}
