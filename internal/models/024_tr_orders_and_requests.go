@@ -19,5 +19,5 @@ type OrderAndRequest struct {
 }
 
 func (OrderAndRequest) TableName() string {
-	return "tr_order_and_requests"
+	return "tr_orders_and_requests"
 }
