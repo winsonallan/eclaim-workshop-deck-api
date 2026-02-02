@@ -8,7 +8,7 @@ type Invoice struct {
 	InvoiceDocNumber   string    `gorm:"type:varchar(35);not null" json:"invoice_doc_number"`
 	ReferenceDocNumber string    `gorm:"type:varchar(35);null" json:"reference_doc_number"`
 	PaymentStatus      string    `gorm:"type:enum('draft','unpaid','void','partial',paid');not null" json:"payment_status"`
-	PaymentAmount      string    `gorm:"type:int(11);not null" json:"payment_amount"`
+	PaymentAmount      uint      `gorm:"type:int(11);not null" json:"payment_amount"`
 	InvoiceFileUrl     string    `gorm:"type:varchar(255);not null" json:"invoice_file_url"`
 	IsLocked           bool      `gorm:"type:tinyint(1);default:0;not null" json:"is_locked"`
 	CreatedAt          time.Time `gorm:"column:created_date;type:datetime;default:CURRENT_TIMESTAMP" json:"created_date"`

@@ -6,7 +6,7 @@ type Measurement struct {
 	MeasurementNo  uint      `gorm:"primaryKey;type:int(11);not null;autoIncrement;column:measurement_no" json:"measurement_no"`
 	PanelPricingNo uint      `gorm:"type:int(11);not null;column:panel_pricing_no;" json:"panel_pricing_no"`
 	ConditionText  string    `gorm:"type:varchar(255);not null;column:condition_text" json:"condition_text"`
-	Notes          string    `gorm:"type:varchar(255);" json:"notes"`
+	Notes          string    `gorm:"type:varchar(255);null" json:"notes"`
 	LaborFee       uint      `gorm:"type:int(11);not null;column:labor_fee" json:"labor_fee"`
 	IsLocked       bool      `gorm:"column:is_locked;type:tinyint(1);not null;default:0" json:"is_locked"`
 	CreatedBy      *uint     `gorm:"column:created_by;type:int(11);null" json:"created_by"`
