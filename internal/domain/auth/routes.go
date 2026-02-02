@@ -6,11 +6,12 @@ func RegisterRoutes(router *gin.RouterGroup, handler *Handler, authMiddleware gi
 	auth := router.Group("/auth")
 	{
 		// Public routes
+		auth.GET("/get-user-by-email", handler.GetUserByEmail)
+
 		auth.POST("/register", handler.Register)
 		auth.POST("/login", handler.Login)
 		auth.POST("/refresh", handler.RefreshToken)
 		auth.POST("/reset-password", handler.ResetPassword)
-		auth.GET("/get-user-by-email", handler.GetUserByEmail)
 		auth.POST("/generate-api-key", handler.GenerateAPIKey)
 		auth.POST("/change-password", handler.ChangePassword)
 

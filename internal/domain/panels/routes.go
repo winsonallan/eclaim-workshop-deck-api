@@ -13,6 +13,7 @@ func RegisterRoutes(router *gin.RouterGroup, handler *Handler, authMiddleware gi
 			panelsPricing := panels.Group("/pricing")
 			{
 				panelsPricing.GET("", handler.GetPanelPricings)
+				panelsPricing.POST("", handler.CreatePanelPricing)
 			}
 		}
 	}

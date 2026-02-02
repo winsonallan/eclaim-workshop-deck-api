@@ -99,6 +99,25 @@ func (r *Repository) FindMOUByID(id uint) (*models.MOU, error) {
 	return &mou, err
 }
 
+func (r *Repository) FindPanelPricingById(id uint) (*models.PanelPricing, error) {
+	var panelPricing models.PanelPricing
+
+	err := r.db.
+		Preload("Insurer").
+		Preload("Workshop").
+		Preload("CreatedByUser").
+		Preload("Mou").
+		Preload("WorkshopPanels").
+		Where("panel_pricing_no", id).
+		First(&panelPricing).Error
+
+	return &panelPricing, err
+}
+
 func (r *Repository) CreateMOU(mou *models.MOU) error {
 	return r.db.Create(mou).Error
+}
+
+func (r *Repository) CreatePanelPricing(panelPricing *models.PanelPricing) error {
+	return r.db.Create(panelPricing).Error
 }

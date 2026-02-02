@@ -161,3 +161,19 @@ func (h *Handler) CreateMOU(c *gin.Context) {
 
 	response.Success(c, http.StatusCreated, "MOU created successfully", gin.H{"mou": mou})
 }
+
+func (h *Handler) CreatePanelPricing(c *gin.Context) {
+	var req CreatePanelPricingRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	panelPricing, err := h.service.CreatePanelPricing(req)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusCreated, "Panel pricing created successfully", gin.H{"panel_pricing": panelPricing})
+}
