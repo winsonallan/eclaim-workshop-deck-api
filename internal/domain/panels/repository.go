@@ -63,12 +63,14 @@ func (r *Repository) GetMOUs(insID, woID, mouID uint, activeOnly bool) ([]models
 
 func (r *Repository) GetPanelPricings(insID, woID, mouID uint) ([]models.PanelPricing, error) {
 	var panelPricings []models.PanelPricing
-	query := r.db.Preload("Insurer").
+	query := r.db.
+		Preload("Insurer").
 		Preload("Workshop").
 		Preload("WorkshopPanels").
 		Preload("Mou").
 		Preload("CreatedByUser").
-		Preload("LastModifiedByUser")
+		Preload("LastModifiedByUser").
+		Preload("Measurements")
 
 	// Add filters only if the ID is provided (not 0)
 	if insID != 0 {

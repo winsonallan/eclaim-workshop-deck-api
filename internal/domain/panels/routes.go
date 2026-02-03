@@ -22,7 +22,6 @@ func RegisterRoutes(router *gin.RouterGroup, handler *Handler, authMiddleware gi
 	{
 		mou.Use(authMiddleware)
 		{
-			// This ONE route handles all your previous use cases
 			mou.GET("", handler.GetMOUs)
 			mou.POST("", handler.CreateMOU)
 		}
