@@ -32,6 +32,10 @@ func (s *Service) GetPanelPricings(insurerId, workshopId, mouId uint) ([]models.
 	return s.repo.GetPanelPricings(insurerId, workshopId, mouId)
 }
 
+func (s *Service) GetWorkshopPanelPricings(workshopId uint) ([]models.PanelPricing, error) {
+	return s.repo.GetWorkshopPanelPricings(workshopId)
+}
+
 func (s *Service) CreateMOU(req CreateMOURequest) (*models.MOU, error) {
 	if req.MouDocumentNumber == "" {
 		return nil, errors.New("MOU Document Number is required")

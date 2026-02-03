@@ -145,6 +145,23 @@ func (h *Handler) GetPanelPricings(c *gin.Context) {
 	response.Success(c, http.StatusOK, "Panel Pricingss Retrieved Successfully", gin.H{"panel_pricings": panelPricings})
 }
 
+func (h *Handler) GetAllWorkshopPanelPricings(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid workshop no")
+		return
+	}
+
+	panelPricings, err := h.service.GetWorkshopPanelPricings(uint(id))
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Workshop Panel Pricingss Retrieved Successfully", gin.H{"panel_pricings": panelPricings})
+}
+
 // Create
 func (h *Handler) CreateMOU(c *gin.Context) {
 	var req CreateMOURequest
