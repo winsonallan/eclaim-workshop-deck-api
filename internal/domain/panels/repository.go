@@ -98,7 +98,7 @@ func (r *Repository) GetWorkshopPanelPricings(woID uint) ([]models.PanelPricing,
 		Preload("WorkshopPanels").
 		Preload("CreatedByUser").
 		Preload("LastModifiedByUser").
-		Preload("Measurements").
+		Preload("Measurements", "is_locked = ?", false).
 		Where("insurer_no IS NULL AND mou_no IS NULL AND workshop_no = ?", woID)
 
 	err := query.Find(&panelPricings).Error
@@ -158,7 +158,18 @@ func (r *Repository) CreateWorkshopPanel(workshopPanel *models.WorkshopPanels) e
 	return r.db.Create(workshopPanel).Error
 }
 
+func (r *Repository) CreateMeasurement(measurement *models.Measurement) error {
+	return r.db.Create(measurement).Error
+}
+
 // Update
 func (r *Repository) UpdatePanelPricing(panelPricing *models.PanelPricing) error {
 	return r.db.Save(panelPricing).Error
+}
+
+// Delete
+func (r *Repository) SoftDeleteMeasurementsByPanelPricingNo(panelPricingNo uint) error {
+	return r.db.Model(&models.Measurement{}).
+		Where("panel_pricing_no = ? AND is_locked = ?", panelPricingNo, 0).
+		Update("is_locked", 1).Error
 }

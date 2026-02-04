@@ -77,7 +77,7 @@ func (s *Service) CreateMOU(req CreateMOURequest) (*models.MOU, error) {
 	return s.repo.FindMOUByID(mou.MouNo)
 }
 
-func (s *Service) CreatePanelPricing(req CreatePanelPricingRequest) (*models.PanelPricing, error) {
+func (s *Service) preparePanelPricing(req BasePricingRequest) (*models.PanelPricing, error) {
 	// 1. Core Validation
 	if req.WorkshopNo == 0 {
 		return nil, errors.New("Workshop No is required")
@@ -86,47 +86,34 @@ func (s *Service) CreatePanelPricing(req CreatePanelPricingRequest) (*models.Pan
 		return nil, errors.New("Service Type is required")
 	}
 
-	// 2. Custom vs Standard Panel Logic
-	if *req.IsCustom {
-		if req.CustomPanelName == "" {
-			return nil, errors.New("Since it's a custom panel, custom panel name is required")
-		}
-	} else if req.WorkshopPanelNo == 0 {
-		return nil, errors.New("Since it's not a custom panel, workshop_panel_no is required")
-	}
-
-	// 3. Pricing Logic (Fixed vs Conditional)
+	// 2. Pricing Logic Validation
 	if *req.IsFixedPrice {
+		// Now BasePricingRequest implements PricingRequest interface
 		if err := validateFixedPricing(req); err != nil {
 			return nil, err
 		}
-	} else {
-		// Validation: Ensure the slice has at least one entry
-		if len(req.Measurements) == 0 {
-			return nil, errors.New("measurements must exist since it's conditional pricing")
-		}
+	} else if len(req.Measurements) == 0 {
+		return nil, errors.New("measurements must exist since it's conditional pricing")
 	}
 
-	// 4. Data Mapping
+	// 3. Mapping
 	panelPricing := &models.PanelPricing{
 		WorkshopNo:       req.WorkshopNo,
 		ServiceType:      req.ServiceType,
 		IsFixedPrice:     *req.IsFixedPrice,
-		VehicleRangeLow:  0,
-		VehicleRangeHigh: 999999999999,
 		SparePartCost:    req.SparePartCost,
 		LaborFee:         req.LaborFee,
+		VehicleRangeLow:  0,
+		VehicleRangeHigh: 999999999999,
 	}
 
 	if req.VehicleRangeLow != 0 {
 		panelPricing.VehicleRangeLow = req.VehicleRangeLow
 	}
-
-	if req.VehicleRangeHigh != 999999999999 && req.VehicleRangeHigh != 0 {
+	if req.VehicleRangeHigh != 0 && req.VehicleRangeHigh != 999999999999 {
 		panelPricing.VehicleRangeHigh = req.VehicleRangeHigh
 	}
 
-	// Handle Optional Pointers
 	if req.InsurerNo != 0 {
 		panelPricing.InsurerNo = &req.InsurerNo
 	}
@@ -136,29 +123,59 @@ func (s *Service) CreatePanelPricing(req CreatePanelPricingRequest) (*models.Pan
 	if req.AdditionalNote != "" {
 		panelPricing.AdditionalNotes = req.AdditionalNote
 	}
-	if req.CreatedBy != 0 {
-		panelPricing.CreatedBy = &req.CreatedBy
+
+	return panelPricing, nil
+}
+
+func (s *Service) CreatePanelPricing(req CreatePanelPricingRequest) (*models.PanelPricing, error) {
+	// Pass the embedded BasePricingRequest field
+	panelPricing, err := s.preparePanelPricing(req.BasePricingRequest)
+	if err != nil {
+		return nil, err
 	}
 
+	// Handle Custom Panel creation
 	if *req.IsCustom {
+		if req.CustomPanelName == "" {
+			return nil, errors.New("custom panel name is required")
+		}
 		workshopPanel := &models.WorkshopPanels{
 			WorkshopNo: req.WorkshopNo,
 			PanelName:  req.CustomPanelName,
 			CreatedBy:  &req.CreatedBy,
 		}
-
 		if err := s.repo.CreateWorkshopPanel(workshopPanel); err != nil {
 			return nil, err
 		}
-
 		panelPricing.WorkshopPanelNo = workshopPanel.WorkshopPanelNo
 	} else {
+		if req.WorkshopPanelNo == 0 {
+			return nil, errors.New("workshop_panel_no is required")
+		}
 		panelPricing.WorkshopPanelNo = req.WorkshopPanelNo
 	}
 
-	// 5. Database Operations
+	panelPricing.CreatedBy = &req.CreatedBy
+
+	// Save Main Record
 	if err := s.repo.CreatePanelPricing(panelPricing); err != nil {
 		return nil, err
+	}
+
+	// Handle Measurements
+	if !*req.IsFixedPrice {
+		for _, m := range req.Measurements {
+			measurement := &models.Measurement{
+				PanelPricingNo: panelPricing.PanelPricingNo,
+				ConditionText:  m.ConditionText,
+				Notes:          m.Note,
+				LaborFee:       m.LaborFee,
+				CreatedBy:      &req.CreatedBy,
+			}
+			if err := s.repo.CreateMeasurement(measurement); err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	return s.repo.FindPanelPricingById(panelPricing.PanelPricingNo)
@@ -179,7 +196,6 @@ func (s *Service) CreateWorkshopPanel(req CreateWorkshopPanelRequest) (*models.W
 
 	workshopPanel := &models.WorkshopPanels{
 		WorkshopNo: req.WorkshopNo,
-		PanelNo:    req.PanelNo,
 		PanelName:  req.PanelName,
 		CreatedBy:  &req.CreatedBy,
 	}
@@ -193,93 +209,76 @@ func (s *Service) CreateWorkshopPanel(req CreateWorkshopPanelRequest) (*models.W
 
 // Update
 func (s *Service) UpdatePanelPricing(id uint, req UpdatePanelPricingRequest) (*models.PanelPricing, error) {
-	panelPricing, err := s.repo.FindPanelPricingById(id)
+	// 1. Check existence
+	existing, err := s.repo.FindPanelPricingById(id)
 	if err != nil {
 		return nil, errors.New("panel pricing not found")
 	}
-	// 1. Core Validation
-	if req.WorkshopNo == 0 {
-		return nil, errors.New("Workshop No is required")
-	}
-	if req.ServiceType == "" {
-		return nil, errors.New("Service Type is required")
+
+	// 2. Map & Validate using the embedded Base struct
+	updatedData, err := s.preparePanelPricing(req.BasePricingRequest)
+	if err != nil {
+		return nil, err
 	}
 
-	// 2. Custom vs Standard Panel Logic
+	// 3. Handle Custom Panel Logic
 	if *req.IsCustom {
 		if req.CustomPanelName == "" {
-			return nil, errors.New("Since it's a custom panel, custom panel name is required")
+			return nil, errors.New("custom panel name is required")
 		}
-	} else if req.WorkshopPanelNo == 0 {
-		return nil, errors.New("Since it's not a custom panel, workshop_panel_no is required")
-	}
-
-	// 3. Pricing Logic (Fixed vs Conditional)
-	if *req.IsFixedPrice {
-		if err := validateFixedPricing(req); err != nil {
-			return nil, err
-		}
-	} else {
-		// Validation: Ensure the slice has at least one entry
-		if len(req.Measurements) == 0 {
-			return nil, errors.New("measurements must exist since it's conditional pricing")
-		}
-	}
-
-	panelPricing.WorkshopNo = req.WorkshopNo
-	panelPricing.WorkshopPanelNo = req.WorkshopPanelNo
-	panelPricing.ServiceType = req.ServiceType
-	panelPricing.IsFixedPrice = *req.IsFixedPrice
-	panelPricing.SparePartCost = req.SparePartCost
-	panelPricing.LaborFee = req.LaborFee
-
-	if req.VehicleRangeLow != 0 {
-		panelPricing.VehicleRangeLow = req.VehicleRangeLow
-	}
-
-	if req.VehicleRangeHigh != 999999999999 && req.VehicleRangeHigh != 0 {
-		panelPricing.VehicleRangeHigh = req.VehicleRangeHigh
-	}
-
-	// Handle Optional Pointers
-	if req.InsurerNo != 0 {
-		panelPricing.InsurerNo = &req.InsurerNo
-	}
-
-	if req.MouNo != 0 {
-		panelPricing.MouNo = &req.MouNo
-	}
-
-	if req.AdditionalNote != "" {
-		panelPricing.AdditionalNotes = req.AdditionalNote
-	}
-
-	if req.LastModifiedBy != 0 {
-		panelPricing.LastModifiedBy = &req.LastModifiedBy
-	}
-
-	if *req.IsCustom {
 		workshopPanel := &models.WorkshopPanels{
 			WorkshopNo: req.WorkshopNo,
 			PanelName:  req.CustomPanelName,
 			CreatedBy:  &req.LastModifiedBy,
 		}
-
 		if err := s.repo.CreateWorkshopPanel(workshopPanel); err != nil {
 			return nil, err
 		}
-
-		panelPricing.WorkshopPanelNo = workshopPanel.WorkshopPanelNo
+		existing.WorkshopPanelNo = workshopPanel.WorkshopPanelNo
 	} else {
-		panelPricing.WorkshopPanelNo = req.WorkshopPanelNo
+		existing.WorkshopPanelNo = req.WorkshopPanelNo
 	}
 
-	// 5. Database Operations
-	if err := s.repo.UpdatePanelPricing(panelPricing); err != nil {
+	// 4. Update core fields
+	existing.WorkshopNo = updatedData.WorkshopNo
+	existing.ServiceType = updatedData.ServiceType
+	existing.IsFixedPrice = updatedData.IsFixedPrice
+	existing.SparePartCost = updatedData.SparePartCost
+	existing.LaborFee = updatedData.LaborFee
+	existing.VehicleRangeLow = updatedData.VehicleRangeLow
+	existing.VehicleRangeHigh = updatedData.VehicleRangeHigh
+	existing.InsurerNo = updatedData.InsurerNo
+	existing.MouNo = updatedData.MouNo
+	existing.AdditionalNotes = updatedData.AdditionalNotes
+	existing.LastModifiedBy = &req.LastModifiedBy
+
+	// 5. Save Main Record
+	if err := s.repo.UpdatePanelPricing(existing); err != nil {
 		return nil, err
 	}
 
-	return s.repo.FindPanelPricingById(panelPricing.PanelPricingNo)
+	// 6. Sync Measurements (Soft Delete then Re-insert)
+	if err := s.repo.SoftDeleteMeasurementsByPanelPricingNo(id); err != nil {
+		return nil, err
+	}
+
+	if !*req.IsFixedPrice {
+		for _, m := range req.Measurements {
+			newM := &models.Measurement{
+				PanelPricingNo: id,
+				ConditionText:  m.ConditionText,
+				Notes:          m.Note,
+				LaborFee:       m.LaborFee,
+				CreatedBy:      &req.LastModifiedBy,
+				IsLocked:       false, // Changed from 0 to false for bool type
+			}
+			if err := s.repo.CreateMeasurement(newM); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return s.repo.FindPanelPricingById(id)
 }
 
 // Delete

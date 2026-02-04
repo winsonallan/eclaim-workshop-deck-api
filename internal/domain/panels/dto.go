@@ -20,8 +20,6 @@ type BasePricingRequest struct {
 	MouNo      uint `json:"mou_no"`
 
 	WorkshopPanelNo uint   `json:"workshop_panel_no"`
-	PanelNo         uint   `json:"panel_no"`
-	PanelName       string `json:"panel_name"`
 	ServiceType     string `json:"service_type" binding:"required"`
 
 	IsCustom        *bool  `json:"is_custom" binding:"required"`
@@ -37,6 +35,7 @@ type BasePricingRequest struct {
 
 	Measurements []MeasurementInput `json:"measurements"`
 }
+
 type CreatePanelPricingRequest struct {
 	BasePricingRequest
 	CreatedBy uint `json:"created_by" binding:"required"`
@@ -63,3 +62,8 @@ type PricingRequest interface {
 type DeletePanelPricingRequest struct {
 	LastModifiedBy uint `json:"last_modified_by"`
 }
+
+// Implement PricingRequest interface for BasePricingRequest
+func (r BasePricingRequest) GetServiceType() string { return r.ServiceType }
+func (r BasePricingRequest) GetLaborFee() uint      { return r.LaborFee }
+func (r BasePricingRequest) GetSparePartCost() uint { return r.SparePartCost }

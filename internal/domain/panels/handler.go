@@ -142,7 +142,7 @@ func (h *Handler) GetPanelPricings(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, http.StatusOK, "Panel Pricingss Retrieved Successfully", gin.H{"panel_pricings": panelPricings})
+	response.Success(c, http.StatusOK, "Panel Pricingss Retrieved Successfully", gin.H{"panel_pricing": panelPricings})
 }
 
 func (h *Handler) GetAllWorkshopPanelPricings(c *gin.Context) {
@@ -159,7 +159,7 @@ func (h *Handler) GetAllWorkshopPanelPricings(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, http.StatusOK, "Workshop Panel Pricingss Retrieved Successfully", gin.H{"panel_pricings": panelPricings})
+	response.Success(c, http.StatusOK, "Workshop Panel Pricingss Retrieved Successfully", gin.H{"panel_pricing": panelPricings})
 }
 
 // Create
