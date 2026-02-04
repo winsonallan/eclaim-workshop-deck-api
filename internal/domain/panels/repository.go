@@ -99,7 +99,7 @@ func (r *Repository) GetWorkshopPanelPricings(woID uint) ([]models.PanelPricing,
 		Preload("CreatedByUser").
 		Preload("LastModifiedByUser").
 		Preload("Measurements", "is_locked = ?", false).
-		Where("insurer_no IS NULL AND mou_no IS NULL AND workshop_no = ?", woID)
+		Where("insurer_no IS NULL AND mou_no IS NULL AND workshop_no = ? AND is_locked = 0", woID)
 
 	err := query.Find(&panelPricings).Error
 	return panelPricings, err
