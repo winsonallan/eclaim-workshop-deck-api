@@ -43,7 +43,7 @@ func (h *Handler) GetAllWorkshopPanels(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, http.StatusCreated, "Workshop Panels Retrieved Successfully", gin.H{"workshop-panels": panels})
+	response.Success(c, http.StatusCreated, "Workshop Panels Retrieved Successfully", gin.H{"workshop_panels": panels})
 }
 
 func (h *Handler) GetMOUs(c *gin.Context) {
@@ -193,4 +193,53 @@ func (h *Handler) CreatePanelPricing(c *gin.Context) {
 	}
 
 	response.Success(c, http.StatusCreated, "Panel pricing created successfully", gin.H{"panel_pricing": panelPricing})
+}
+
+// Update
+func (h *Handler) UpdatePanelPricing(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid panel pricing no")
+		return
+	}
+
+	var req UpdatePanelPricingRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	panelPricing, err := h.service.UpdatePanelPricing(uint(id), req)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Panel pricing updated successfully", gin.H{"panel_pricing": panelPricing})
+}
+
+// Delete
+func (h *Handler) DeletePanelPricing(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid panel pricing no")
+		return
+	}
+
+	var req DeletePanelPricingRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	pic, err := h.service.DeletePanelPricing(uint(id), req)
+
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+	} else {
+		response.Success(c, http.StatusOK, "Panel Pricing Deleted Successfully", pic)
+	}
 }

@@ -18,7 +18,10 @@ func NewRepository(db *gorm.DB) *Repository {
 func (r *Repository) GetAllPanels() ([]models.Panel, error) {
 	var panels []models.Panel
 
-	err := r.db.Where("is_locked = ?", 0).Order("panel_name asc").Find(&panels).Error
+	err := r.db.
+		Where("is_locked = ?", 0).
+		Order("panel_name asc").
+		Find(&panels).Error
 
 	return panels, err
 }
@@ -27,6 +30,7 @@ func (r *Repository) GetAllWorkshopPanels(id uint) ([]models.WorkshopPanels, err
 	var workshopPanels []models.WorkshopPanels
 
 	err := r.db.
+		Preload("Panel").
 		Where("is_locked = ?", 0).
 		Where("(workshop_no IS NULL OR workshop_no = ?)", id).
 		Find(&workshopPanels).Error
@@ -130,10 +134,31 @@ func (r *Repository) FindPanelPricingById(id uint) (*models.PanelPricing, error)
 	return &panelPricing, err
 }
 
+func (r *Repository) FindWorkshopPanelById(id uint) (*models.WorkshopPanels, error) {
+	var workshopPanel models.WorkshopPanels
+
+	err := r.db.
+		Preload("Workshop").
+		Preload("Panel").
+		Where("workshop_panel_no = ? AND is_locked = 0", id).
+		First(&workshopPanel).Error
+
+	return &workshopPanel, err
+}
+
 func (r *Repository) CreateMOU(mou *models.MOU) error {
 	return r.db.Create(mou).Error
 }
 
 func (r *Repository) CreatePanelPricing(panelPricing *models.PanelPricing) error {
 	return r.db.Create(panelPricing).Error
+}
+
+func (r *Repository) CreateWorkshopPanel(workshopPanel *models.WorkshopPanels) error {
+	return r.db.Create(workshopPanel).Error
+}
+
+// Update
+func (r *Repository) UpdatePanelPricing(panelPricing *models.PanelPricing) error {
+	return r.db.Save(panelPricing).Error
 }

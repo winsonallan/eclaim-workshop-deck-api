@@ -15,6 +15,7 @@ type PanelPricing struct {
 	SparePartCost    uint      `gorm:"type:int(11);null" json:"spare_part_cost"`
 	LaborFee         uint      `gorm:"type:int(11);null" json:"labor_fee"`
 	AdditionalNotes  string    `gorm:"type:varchar(255);null" json:"additional_notes"`
+	IsLocked         bool      `gorm:"type:tinyint(1);not null;default:0" json:"is_locked"`
 	CreatedBy        *uint     `gorm:"column:created_by;type:int(11);null" json:"created_by"`
 	CreatedAt        time.Time `gorm:"column:created_date;type:datetime;default:CURRENT_TIMESTAMP" json:"created_date"`
 	UpdatedAt        time.Time `gorm:"column:last_modified_date;null;type:datetime;default:CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP" json:"last_modified_date"`
