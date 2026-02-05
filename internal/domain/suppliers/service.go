@@ -109,6 +109,11 @@ func (s *Service) UpdateSupplier(id uint, req UpdateSupplierRequest) (*models.Su
 	existing.SupplierAddress = updatedData.SupplierAddress
 	existing.SupplierEmail = updatedData.SupplierEmail
 	existing.SupplierPhone = updatedData.SupplierPhone
+	existing.CityNo = updatedData.CityNo
+	existing.CityType = updatedData.CityType
+	existing.CityName = updatedData.CityName
+	existing.ProvinceNo = updatedData.ProvinceNo
+	existing.ProvinceName = updatedData.ProvinceName
 	existing.LastModifiedBy = &req.LastModifiedBy
 
 	// 5. Save Main Record
