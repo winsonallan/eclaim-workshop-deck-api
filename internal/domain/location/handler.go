@@ -33,3 +33,16 @@ func (h *Handler) GetCities(c *gin.Context) {
 		"count":  len(cities),
 	})
 }
+
+func (h *Handler) GetProvinces(c *gin.Context) {
+	provinces, err := h.service.GetProvinces()
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to fetch provinces")
+		return
+	}
+
+	response.Success(c, http.StatusOK, "provinces retrieved successfully", gin.H{
+		"provinces": provinces,
+		"count":     len(provinces),
+	})
+}

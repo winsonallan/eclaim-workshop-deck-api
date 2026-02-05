@@ -21,3 +21,11 @@ func (r *Repository) GetCities() ([]models.City, error) {
 
 	return cities, err
 }
+
+func (r *Repository) GetProvinces() ([]models.Province, error) {
+	var provinces []models.Province
+
+	err := r.db.Where("is_locked = ?", 0).Order("province_name").Find(&provinces).Error
+
+	return provinces, err
+}

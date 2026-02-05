@@ -18,6 +18,11 @@ func (r *Repository) GetSuppliers() ([]models.Supplier, error) {
 	var supplier []models.Supplier
 
 	err := r.db.
+		Preload("Workshop").
+		Preload("CreatedByUser").
+		Preload("LastModifiedByUser").
+		Preload("City").
+		Preload("Province").
 		Where("is_locked = ?", 0).
 		Order("supplier_name asc").
 		Find(&supplier).Error
@@ -32,6 +37,8 @@ func (r *Repository) GetWorkshopSuppliers(id uint) ([]models.Supplier, error) {
 		Preload("Workshop").
 		Preload("CreatedByUser").
 		Preload("LastModifiedByUser").
+		Preload("City").
+		Preload("Province").
 		Where("is_locked = ?", 0).
 		Where("workshop_no = ?", id).
 		Find(&suppliers).Error
@@ -46,6 +53,8 @@ func (r *Repository) FindSupplierByID(id uint) (*models.Supplier, error) {
 		Preload("Workshop").
 		Preload("CreatedByUser").
 		Preload("LastModifiedByUser").
+		Preload("City").
+		Preload("Province").
 		Where("is_locked = ?", 0).
 		Where("supplier_no", id).
 		First(&supplier).Error

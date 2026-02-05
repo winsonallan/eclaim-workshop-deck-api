@@ -18,3 +18,7 @@ func NewService(repo *Repository) *Service {
 func (s *Service) GetCities() ([]models.City, error) {
 	return s.repo.GetCities()
 }
+
+func (s *Service) GetProvinces() ([]models.Province, error) {
+	return s.repo.GetProvinces()
+}

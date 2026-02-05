@@ -7,6 +7,6 @@ func RegisterRoutes(router *gin.RouterGroup, handler *Handler, authMiddleware gi
 	{
 		// Public routes
 		location.GET("/cities", handler.GetCities)
-
+		location.GET("/provinces", handler.GetProvinces)
 	}
 }
