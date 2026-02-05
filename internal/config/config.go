@@ -16,7 +16,7 @@ type Config struct {
 	DBName       string
 	JWTSecret    string
 	Port         string
-	FrontendURLs []string // Changed to slice
+	FrontendURLs []string
 }
 
 func LoadConfig() *Config {
@@ -25,11 +25,9 @@ func LoadConfig() *Config {
 		log.Println("No .env file found, using environment variables")
 	}
 
-	// Parse comma-separated URLs
 	frontendURLsStr := getEnv("FRONTEND_URLS", "http://localhost:3000")
 	frontendURLs := strings.Split(frontendURLsStr, ",")
 
-	// Trim whitespace from each URL
 	for i, url := range frontendURLs {
 		frontendURLs[i] = strings.TrimSpace(url)
 	}
