@@ -33,6 +33,24 @@ func (h *Handler) GetAccount(c *gin.Context) {
 	response.Success(c, http.StatusOK, "Account Retrieved Successfully", gin.H{"account": account})
 }
 
+func (h *Handler) GetProfileFromUserNo(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	user, err := h.service.GetProfileFromUserNo(uint(id))
+
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "User Profile Retrieved Successfully", gin.H{"user": user})
+}
+
 func (h *Handler) GetProfileDetails(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)

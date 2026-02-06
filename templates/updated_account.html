@@ -1,0 +1,261 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        background-color: rgb(249, 248, 240);
+        line-height: 1.6;
+      }
+      .email-wrapper {
+        padding: 40px 20px;
+      }
+      .email-container {
+        background: #ffffff;
+        max-width: 560px;
+        margin: 0 auto;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(19, 45, 63, 0.1);
+        overflow: hidden;
+      }
+      .email-header {
+        background: linear-gradient(
+          135deg,
+          rgb(19, 45, 63) 0%,
+          rgb(40, 107, 126) 100%
+        );
+        padding: 32px 32px 24px;
+        text-align: center;
+      }
+      .email-header h1 {
+        margin: 0;
+        color: #ffffff;
+        font-size: 24px;
+        font-weight: 600;
+      }
+      .email-body {
+        padding: 32px;
+      }
+      .greeting {
+        font-size: 16px;
+        color: rgb(19, 45, 63);
+        margin: 0 0 20px 0;
+      }
+      .message-text {
+        font-size: 15px;
+        color: rgb(47, 78, 38);
+        margin: 0 0 24px 0;
+      }
+      .success-section {
+        background: rgb(240, 253, 244);
+        border: 2px solid rgb(74, 222, 128);
+        border-radius: 8px;
+        padding: 24px;
+        margin: 24px 0;
+        text-align: center;
+      }
+      .success-icon {
+        font-size: 48px;
+        margin: 0 0 12px 0;
+      }
+      .success-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: rgb(22, 101, 52);
+        margin: 0 0 8px 0;
+      }
+      .success-message {
+        font-size: 14px;
+        color: rgb(47, 78, 38);
+        margin: 0;
+      }
+      .changes-section {
+        background: rgb(252, 255, 247);
+        border: 2px solid rgb(142, 159, 118);
+        border-radius: 8px;
+        padding: 20px 24px;
+        margin: 24px 0;
+      }
+      .changes-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: rgb(47, 78, 38);
+        margin: 0 0 16px 0;
+      }
+      .change-item {
+        margin-bottom: 16px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid rgb(222, 197, 138);
+      }
+      .change-item:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+      }
+      .change-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: rgb(102, 119, 97);
+        margin: 0 0 4px 0;
+        font-weight: 600;
+      }
+      .change-value {
+        font-size: 15px;
+        color: rgb(19, 45, 63);
+        margin: 0;
+        font-weight: 600;
+      }
+      .change-value.updated {
+        color: rgb(22, 101, 52);
+      }
+      .info-section {
+        background: rgb(252, 255, 247);
+        border: 2px solid rgb(142, 159, 118);
+        border-radius: 8px;
+        padding: 20px 24px;
+        margin: 24px 0;
+      }
+      .info-label {
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: rgb(102, 119, 97);
+        margin: 0 0 8px 0;
+        font-weight: 600;
+      }
+      .info-value {
+        font-size: 15px;
+        color: rgb(19, 45, 63);
+        margin: 0 0 16px 0;
+        font-weight: 600;
+      }
+      .info-value:last-child {
+        margin-bottom: 0;
+      }
+      .warning-section {
+        background: rgb(255, 245, 244);
+        border-left: 4px solid rgb(149, 25, 12);
+        padding: 20px 24px;
+        margin: 24px 0;
+        border-radius: 4px;
+      }
+      .warning-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: rgb(47, 78, 38);
+        margin: 0 0 8px 0;
+      }
+      .warning-text {
+        font-size: 14px;
+        color: rgb(47, 78, 38);
+        margin: 0;
+        line-height: 1.5;
+      }
+      .info-text {
+        font-size: 14px;
+        color: rgb(102, 119, 97);
+        margin: 20px 0 0 0;
+        line-height: 1.5;
+      }
+      .email-footer {
+        background: rgb(249, 248, 240);
+        padding: 24px 32px;
+        text-align: center;
+        border-top: 1px solid rgb(222, 197, 138);
+      }
+      .footer-text {
+        margin: 0;
+        font-size: 12px;
+        color: rgb(102, 119, 97);
+      }
+      .footer-brand {
+        margin: 8px 0 0 0;
+        font-size: 13px;
+        color: rgb(19, 45, 63);
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="email-wrapper">
+      <div class="email-container">
+        <div class="email-header">
+          <h1>✅ Account Updated Successfully</h1>
+        </div>
+
+        <div class="email-body">
+          <p class="greeting">Hello <strong>{{.Username}}</strong>,</p>
+
+          <p class="message-text">
+            Your Workshop Deck account has been successfully updated. Here's a
+            summary of the changes made to your account.
+          </p>
+
+          <div class="success-section">
+            <div class="success-icon">✨</div>
+            <p class="success-title">Account Updated</p>
+            <p class="success-message">
+              Your account information has been saved
+            </p>
+          </div>
+
+          <div class="changes-section">
+            <p class="changes-title">Changes Made:</p>
+
+            {{if .EmailChanged}}
+            <div class="change-item">
+              <p class="change-label">Email Address</p>
+              <p class="change-value updated">{{.NewEmail}}</p>
+            </div>
+            {{end}} {{if .UsernameChanged}}
+            <div class="change-item">
+              <p class="change-label">Username</p>
+              <p class="change-value updated">{{.NewUsername}}</p>
+            </div>
+            {{end}} {{if .PasswordChanged}}
+            <div class="change-item">
+              <p class="change-label">Password</p>
+              <p class="change-value updated">Updated to a new password</p>
+            </div>
+            {{end}}
+          </div>
+
+          <div class="info-section">
+            <p class="info-label">Update Details</p>
+            <p class="info-value"><strong>Date:</strong> {{.Date}}</p>
+            <p class="info-value"><strong>Time:</strong> {{.Time}}</p>
+          </div>
+
+          <div class="warning-section">
+            <p class="warning-title">⚠️ Didn't make these changes?</p>
+            <p class="warning-text">
+              If you did not authorize these changes to your account, please
+              contact our support team immediately. Your account security may be
+              compromised.
+            </p>
+          </div>
+
+          <p class="info-text">
+            If you have any questions about these changes, please don't hesitate
+            to reach out to our support team.
+          </p>
+        </div>
+
+        <div class="email-footer">
+          <p class="footer-text">
+            This is an automated message, please do not reply to this email.
+          </p>
+          <p class="footer-brand">
+            © {{.Year}} Workshop Deck. All rights reserved.
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

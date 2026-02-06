@@ -11,6 +11,7 @@ import (
 	"eclaim-workshop-deck-api/internal/domain/posts"
 	"eclaim-workshop-deck-api/internal/domain/settings"
 	"eclaim-workshop-deck-api/internal/domain/suppliers"
+	"eclaim-workshop-deck-api/internal/domain/usermanagement"
 	"eclaim-workshop-deck-api/internal/middleware"
 	"log"
 
@@ -47,6 +48,7 @@ func main() {
 	settings.RegisterRoutes(api, domains.SettingsHandler, authMiddleware)
 	location.RegisterRoutes(api, domains.LocationHandler, authMiddleware)
 	suppliers.RegisterRoutes(api, domains.SupplierHandler, authMiddleware)
+	usermanagement.RegisterRoutes(api, domains.UserManagementHandler, authMiddleware)
 
 	// Start server
 	log.Printf("Server starting on port %s", cfg.Port)

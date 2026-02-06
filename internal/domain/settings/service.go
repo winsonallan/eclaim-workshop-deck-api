@@ -23,6 +23,10 @@ func (s *Service) GetProfileDetails(id uint) (*models.UserProfile, error) {
 	return s.repo.GetProfileDetails(id)
 }
 
+func (s *Service) GetProfileFromUserNo(id uint) (*models.User, error) {
+	return s.repo.GetProfileFromUserNo(id)
+}
+
 func (s *Service) GetWorkshopDetails(id uint) (models.WorkshopDetails, error) {
 	return s.repo.GetWorkshopDetails(id)
 }

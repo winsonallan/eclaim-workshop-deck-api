@@ -18,6 +18,7 @@ type User struct {
 	UpdatedAt      time.Time `gorm:"column:last_modified_date;null;type:datetime;default:CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP" json:"last_modified_date"`
 	LastModifiedBy *uint     `gorm:"column:last_modified_by;null;type:int(11)" json:"last_modified_by"`
 
+	Role               *Role        `gorm:"foreignKey:RoleNo;references:RoleNo" json:"role,omitempty"`
 	UserProfile        *UserProfile `gorm:"foreignKey:UserProfileNo;references:UserProfileNo" json:"user_profile,omitempty"`
 	CreatedByUser      *User        `gorm:"foreignKey:CreatedBy;references:UserNo" json:"created_by_user,omitempty"`
 	LastModifiedByUser *User        `gorm:"foreignKey:LastModifiedBy;references:UserNo" json:"last_modified_by_user,omitempty"`

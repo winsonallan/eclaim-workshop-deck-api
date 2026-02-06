@@ -16,6 +16,7 @@ func RegisterRoutes(router *gin.RouterGroup, handler *Handler, authMiddleware gi
 		userProfile.Use(authMiddleware)
 		{
 			userProfile.GET("/:id", handler.GetProfileDetails)
+			userProfile.GET("/user/:id", handler.GetProfileFromUserNo)
 			userProfile.GET("/workshop/:id", handler.GetWorkshopDetailsFromUserProfileNo)
 		}
 	}

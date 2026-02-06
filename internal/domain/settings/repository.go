@@ -31,6 +31,18 @@ func (r *Repository) GetProfileDetails(id uint) (*models.UserProfile, error) {
 	return profile, err
 }
 
+func (r *Repository) GetProfileFromUserNo(id uint) (*models.User, error) {
+	var user *models.User
+
+	err := r.db.
+		Preload("UserProfile").
+		Preload("Role").
+		Where("is_locked = ? AND user_no = ?", 0, id).
+		First(&user).Error
+
+	return user, err
+}
+
 func (r *Repository) GetWorkshopDetails(id uint) (models.WorkshopDetails, error) {
 	var workshopDetails models.WorkshopDetails
 

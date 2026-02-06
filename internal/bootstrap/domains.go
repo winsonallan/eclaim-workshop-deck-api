@@ -10,19 +10,21 @@ import (
 	"eclaim-workshop-deck-api/internal/domain/posts"
 	"eclaim-workshop-deck-api/internal/domain/settings"
 	"eclaim-workshop-deck-api/internal/domain/suppliers"
+	"eclaim-workshop-deck-api/internal/domain/usermanagement"
 
 	"gorm.io/gorm"
 )
 
 type Domains struct {
-	AuthDemoHandler *authdemo.Handler
-	PostsHandler    *posts.Handler
-	AuthHandler     *auth.Handler
-	AdminsHandler   *admin.Handler
-	PanelsHandler   *panels.Handler
-	SettingsHandler *settings.Handler
-	LocationHandler *location.Handler
-	SupplierHandler *suppliers.Handler
+	AuthDemoHandler       *authdemo.Handler
+	PostsHandler          *posts.Handler
+	AuthHandler           *auth.Handler
+	AdminsHandler         *admin.Handler
+	PanelsHandler         *panels.Handler
+	SettingsHandler       *settings.Handler
+	LocationHandler       *location.Handler
+	SupplierHandler       *suppliers.Handler
+	UserManagementHandler *usermanagement.Handler
 }
 
 func InitDomains(db *gorm.DB, cfg *config.Config) *Domains {
@@ -65,14 +67,20 @@ func InitDomains(db *gorm.DB, cfg *config.Config) *Domains {
 	supplierService := suppliers.NewService(supplierRepo)
 	supplierHandler := suppliers.NewHandler(supplierService)
 
+	// User Management
+	userManagementRepo := usermanagement.NewRepository(db)
+	userManagementService := usermanagement.NewService(userManagementRepo)
+	userManagementHandler := usermanagement.NewHandler(userManagementService)
+
 	return &Domains{
-		AuthDemoHandler: authDemoHandler,
-		PostsHandler:    postsHandler,
-		AuthHandler:     authHandler,
-		AdminsHandler:   adminsHandler,
-		PanelsHandler:   panelsHandler,
-		SettingsHandler: settingsHandler,
-		LocationHandler: locationHandler,
-		SupplierHandler: supplierHandler,
+		AuthDemoHandler:       authDemoHandler,
+		PostsHandler:          postsHandler,
+		AuthHandler:           authHandler,
+		AdminsHandler:         adminsHandler,
+		PanelsHandler:         panelsHandler,
+		SettingsHandler:       settingsHandler,
+		LocationHandler:       locationHandler,
+		SupplierHandler:       supplierHandler,
+		UserManagementHandler: userManagementHandler,
 	}
 }

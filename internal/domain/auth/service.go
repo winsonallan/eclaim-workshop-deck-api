@@ -1,19 +1,13 @@
 package auth
 
 import (
-	"bytes"
-	"crypto/rand"
-	"eclaim-workshop-deck-api/internal/config"
+	"eclaim-workshop-deck-api/internal/domain/email"
 	"eclaim-workshop-deck-api/internal/models"
 	"eclaim-workshop-deck-api/pkg/utils"
-	"encoding/base64"
 	"errors"
 	"fmt"
-	"text/template"
-	"time"
 
 	"golang.org/x/crypto/bcrypt"
-	"gopkg.in/gomail.v2"
 )
 
 type Service struct {
@@ -26,6 +20,12 @@ func NewService(repo *Repository, jwtSecret string) *Service {
 		repo:      repo,
 		jwtSecret: jwtSecret,
 	}
+}
+
+func createEmailService() *email.EmailService {
+	emailService := email.NewEmailService()
+
+	return emailService
 }
 
 func (s *Service) Register(req RegisterRequest) (*models.User, string, string, error) {
@@ -166,11 +166,16 @@ func (s *Service) ChangePassword(req ChangePasswordRequest) (*models.User, error
 		return nil, err
 	}
 
+	emailService := createEmailService()
+	err = emailService.SendChangedPassword(req.Email, user.UserName)
+
 	return user, nil
 }
 
 func (s *Service) UpdateAccount(req UpdateAccountRequest) (*models.User, error) {
 	userNo := req.UserNo
+	var toEmail, newUID string
+	var emailChanged, usernameChanged, passwordChanged bool
 
 	user, err := s.repo.FindByUserNo(userNo)
 	if err != nil {
@@ -193,7 +198,10 @@ func (s *Service) UpdateAccount(req UpdateAccountRequest) (*models.User, error) 
 
 	hashedNewPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
 	if err != nil {
+		passwordChanged = false
 		return nil, err
+	} else {
+		passwordChanged = true
 	}
 
 	user.Password = string(hashedNewPassword)
@@ -201,15 +209,26 @@ func (s *Service) UpdateAccount(req UpdateAccountRequest) (*models.User, error) 
 
 	if req.Email != "" {
 		user.Email = req.Email
+		toEmail = req.Email
+		emailChanged = true
+	} else {
+		toEmail = user.Email
+		emailChanged = false
 	}
 
 	if req.Username != "" {
 		user.UserId = req.Username
+		newUID = req.Username
+	} else {
+		newUID = user.UserId
 	}
 
 	if err := s.repo.UpdateAccount(user); err != nil {
 		return nil, err
 	}
+
+	emailService := createEmailService()
+	err = emailService.SendUpdatedAccount(toEmail, user.UserName, newUID, emailChanged, usernameChanged, passwordChanged)
 
 	return user, nil
 }
@@ -222,67 +241,18 @@ func (s *Service) ResetPassword(req ResetPasswordRequest) error {
 	}
 
 	// 2. Generate new random password
-	newPassword := generateRandomPassword(32)
+	newPassword, hashed, err := utils.GenerateRandomPassword(32)
 
-	// 3. Hash it
-	hashed, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
-	if err != nil {
-		return fmt.Errorf("failed to hash password: %v", err)
-	}
-
-	// 4. Update user’s password in DB
+	// 3. Update user’s password in DB
 	if err := s.repo.UpdatePassword(user.UserNo, string(hashed)); err != nil {
 		return fmt.Errorf("failed to update password: %v", err)
 	}
 
-	// 5. Send email
-	if err := sendResetEmail(req.Email, req.Username, newPassword); err != nil {
+	emailService := email.NewEmailService()
+	// 4. Send email
+	if err := emailService.SendResetEmail(req.Email, req.Username, newPassword); err != nil {
 		return fmt.Errorf("failed to send email: %v", err)
 	}
 
 	return nil
-}
-
-func generateRandomPassword(length int) string {
-	b := make([]byte, length)
-	rand.Read(b)
-	return base64.URLEncoding.EncodeToString(b)[:length]
-}
-
-// helper: send email using gomail
-func sendResetEmail(to, username, newPassword string) error {
-	tmpl, err := template.ParseFiles("templates/reset_password.html")
-	if err != nil {
-		return err
-	}
-
-	data := struct {
-		Username string
-		Password string
-		Year     int
-	}{
-		Username: username,
-		Password: newPassword,
-		Year:     time.Now().Year(),
-	}
-
-	var body bytes.Buffer
-	if err := tmpl.Execute(&body, data); err != nil {
-		return err
-	}
-
-	m := gomail.NewMessage()
-	m.SetHeader("From", fmt.Sprintf("%s <%s>", config.EmailData.SMTP.Name, config.EmailData.SMTP.User))
-	m.SetHeader("To", to)
-	m.SetHeader("Subject", "Your New Password")
-	m.SetBody("text/html", body.String())
-
-	d := gomail.NewDialer(
-		config.EmailData.SMTP.Server,
-		int(config.EmailData.SMTPPort),
-		config.EmailData.SMTP.User,
-		config.EmailData.SMTP.Pass,
-	)
-
-	return d.DialAndSend(m)
 }
