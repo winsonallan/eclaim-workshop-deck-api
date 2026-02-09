@@ -6,7 +6,7 @@ type Order struct {
 	OrderNo        uint      `gorm:"primaryKey;type:int(11);not null;autoIncrement" json:"order_no"`
 	WorkshopNo     uint      `gorm:"type:int(11);not null" json:"workshop_no"`
 	InsuranceNo    *uint     `gorm:"type:int(11);null" json:"insurance_no"`
-	InvoiceNo      uint      `gorm:"type:int(11);not null" json:"invoice_no"`
+	InvoiceNo      *uint     `gorm:"type:int(11);null" json:"invoice_no"`
 	Status         string    `gorm:"type:enum('draft','incoming','negotiating','repairing','declined','additional_work','repaired','delivered','completed');not null" json:"status"`
 	OrderType      string    `gorm:"type:enum('insurance','manual');not null" json:"order_type"`
 	ClientNo       uint      `gorm:"type:int(11);not null" json:"client_no"`
