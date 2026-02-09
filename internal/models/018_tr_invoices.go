@@ -5,6 +5,7 @@ import "time"
 type Invoice struct {
 	InvoiceNo          uint      `gorm:"type:int(11);primaryKey;autoIncrement;not null" json:"invoice_no"`
 	DeliveryNo         uint      `gorm:"type:int(11);not null" json:"delivery_no"`
+	ClientNo           uint      `gorm:"type:int(11);not null" json:"client_no"`
 	InvoiceDocNumber   string    `gorm:"type:varchar(35);not null" json:"invoice_doc_number"`
 	ReferenceDocNumber string    `gorm:"type:varchar(35);null" json:"reference_doc_number"`
 	PaymentStatus      string    `gorm:"type:enum('draft','unpaid','void','partial',paid');not null" json:"payment_status"`
@@ -17,6 +18,7 @@ type Invoice struct {
 	LastModifiedBy     *uint     `gorm:"column:last_modified_by;null;type:int(11)" json:"last_modified_by"`
 
 	Delivery           *Delivery `gorm:"foreignKey:DeliveryNo;references:DeliveryNo" json:"delivery,omitempty"`
+	Client             *Client   `gorm:"foreignKey:ClientNo;references:ClientNo" json:"client,omitempty"`
 	CreatedByUser      *User     `gorm:"foreignKey:CreatedBy;references:UserNo" json:"created_by_user,omitempty"`
 	LastModifiedByUser *User     `gorm:"foreignKey:LastModifiedBy;references:UserNo" json:"last_modified_by_user,omitempty"`
 }

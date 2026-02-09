@@ -4,6 +4,7 @@ import "time"
 
 type Delivery struct {
 	DeliveryNo       uint      `gorm:"type:int(11);primaryKey;autoIncrement;not null" json:"delivery_no"`
+	ClientNo         uint      `gorm:"type:int(11);not null" json:"client_no"`
 	DeliveryId       string    `gorm:"type:varchar(35);not null"`
 	LastRepairedDate time.Time `gorm:"type:datetime;not null" json:"last_repairerd_date"`
 	DeliveryStatus   string    `gorm:"type:enum('pending_pickup','delivered');null"`
@@ -12,8 +13,9 @@ type Delivery struct {
 	UpdatedAt        time.Time `gorm:"column:last_modified_date;null;type:datetime;default:CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP" json:"last_modified_date"`
 	LastModifiedBy   *uint     `gorm:"column:last_modified_by;null;type:int(11)" json:"last_modified_by"`
 
-	CreatedByUser      *User `gorm:"foreignKey:CreatedBy;references:UserNo" json:"created_by_user,omitempty"`
-	LastModifiedByUser *User `gorm:"foreignKey:LastModifiedBy;references:UserNo" json:"last_modified_by_user,omitempty"`
+	Client             *Client `gorm:"foreignKey:ClientNo;references:ClientNo" json:"client,omitempty"`
+	CreatedByUser      *User   `gorm:"foreignKey:CreatedBy;references:UserNo" json:"created_by_user,omitempty"`
+	LastModifiedByUser *User   `gorm:"foreignKey:LastModifiedBy;references:UserNo" json:"last_modified_by_user,omitempty"`
 }
 
 func (Delivery) TableName() string {
