@@ -20,6 +20,10 @@ func (s *Service) GetOrders() ([]models.Order, error) {
 	return s.repo.GetOrders()
 }
 
+func (s *Service) GetIncomingOrders(workshopId uint) ([]models.Order, error) {
+	return s.repo.GetIncomingOrders(workshopId)
+}
+
 func (s *Service) prepareClient(req AddClientRequest) (*models.Client, error) {
 	var client *models.Client
 

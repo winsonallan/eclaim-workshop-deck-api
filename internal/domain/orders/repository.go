@@ -17,7 +17,31 @@ func NewRepository(db *gorm.DB) *Repository {
 func (r *Repository) GetOrders() ([]models.Order, error) {
 	var orders []models.Order
 
-	err := r.db.Where("is_locked = ?", 0).Order("order_no").Find(&orders).Error
+	err := r.db.
+		Preload("Workshop").
+		Preload("Insurance").
+		Preload("Invoice").
+		Preload("Client").
+		Preload("WorkOrders").
+		Where("is_locked = ?", 0).
+		Order("order_no").
+		Find(&orders).Error
+
+	return orders, err
+}
+
+func (r *Repository) GetIncomingOrders(id uint) ([]models.Order, error) {
+	var orders []models.Order
+
+	err := r.db.
+		Preload("Workshop").
+		Preload("Insurance").
+		Preload("Invoice").
+		Preload("Client").
+		Preload("WorkOrders").
+		Where("is_locked = ? AND workshop_no = ? AND status = ?", 0, id, "incoming").
+		Order("order_no").
+		Find(&orders).Error
 
 	return orders, err
 }

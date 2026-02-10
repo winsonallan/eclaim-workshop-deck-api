@@ -9,6 +9,11 @@ func RegisterRoutes(router *gin.RouterGroup, handler *Handler, authMiddleware gi
 		{
 			orders.GET("", handler.GetOrders)
 			orders.POST("", handler.CreateOrder)
+
+			incomingOrders := orders.Group("/incoming")
+			{
+				incomingOrders.GET("", handler.GetIncomingOrders)
+			}
 		}
 	}
 

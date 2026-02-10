@@ -26,6 +26,7 @@ type Order struct {
 	Client             *Client      `gorm:"foreignKey:ClientNo;references:ClientNo" json:"client,omitempty"`
 	CreatedByUser      *User        `gorm:"foreignKey:CreatedBy;references:UserNo" json:"created_by_user,omitempty"`
 	LastModifiedByUser *User        `gorm:"foreignKey:LastModifiedBy;references:UserNo" json:"last_modified_by_user,omitempty"`
+	WorkOrders         []WorkOrder  `gorm:"foreignKey:OrderNo;references:OrderNo;" json:"work_orders"`
 }
 
 func (Order) TableName() string {
