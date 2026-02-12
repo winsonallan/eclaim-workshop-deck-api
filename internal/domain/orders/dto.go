@@ -27,3 +27,38 @@ type CreateOrderRequest struct {
 	Status        string            `json:"status" binding:"required"`
 	CreatedBy     uint              `json:"created_by" binding:"required"`
 }
+
+type OrderPanelRequest struct {
+	WOGroupNumber           uint   `json:"wo_group_number"`
+	InsurancePanelPricingNo uint   `json:"insurance_panel_pricing_no"`
+	InsurancePanelName      string `json:"insurance_panel_name"`
+	InsurerPrice            uint   `json:"insurer_price"`
+	InsurerMeasurementNo    uint   `json:"insurer_measurement_no"`
+	InsurerServiceType      string `json:"insurer_service_type"`
+	InsurerQty              uint   `json:"insurer_qty"`
+	WorkshopPanelPricingNo  uint   `json:"workshop_panel_pricing_no"`
+	WorkshopPanelName       string `json:"workshop_panel_name"`
+	WorkshopPrice           uint   `json:"workshop_price"`
+	WorkshopMeasurementNo   uint   `json:"workshop_measurement_no"`
+	WorkshopServiceType     string `json:"workshop_service_type"`
+	WorkshopQty             uint   `json:"workshop_qty"`
+	IsIncluded              bool   `json:"is_included"`
+	IsSpecialRepair         bool   `json:"is_special_repair"`
+}
+
+type CreateWorkOrderRequest struct {
+	OrderNo                  uint                `json:"order_no" binding:"required"`
+	AdditionalWorkOrderCount uint                `json:"add_wo_count"`
+	WorkOrderDocumentNumber  string              `json:"wo_doc_number"`
+	WorkOrderUrl             string              `json:"wo_url"`
+	OrderPanels              []OrderPanelRequest `json:"order_panels"`
+
+	CreatedBy uint `json:"created_by"`
+}
+
+type ProposeAdditionalWorkRequest struct {
+	WorkOrderNo uint                `json:"work_order_no" binding:"required"`
+	OrderPanels []OrderPanelRequest `json:"order_panels"`
+
+	LastModifiedBy uint `json:"last_modified_by"`
+}

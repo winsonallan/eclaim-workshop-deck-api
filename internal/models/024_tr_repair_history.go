@@ -16,7 +16,9 @@ type RepairHistory struct {
 	CreatedByUser      *User       `gorm:"foreignKey:CreatedBy;references:UserNo" json:"created_by_user,omitempty"`
 	LastModifiedByUser *User       `gorm:"foreignKey:LastModifiedBy;references:UserNo" json:"last_modified_by_user,omitempty"`
 
-	OrderAndRequests []OrderAndRequest `gorm:"foreignKey:RepairHistoryNo;references:RepairHistoryNo" json:"order_and_requests,omitempty"`
+	OrderAndRequests  []OrderAndRequest `gorm:"foreignKey:RepairHistoryNo;references:RepairHistoryNo" json:"order_and_requests,omitempty"`
+	RepairPhotos      []RepairPhoto     `gorm:"foreignKey:RepairHistoryNo;references:RepairHistoryNo" json:"repair_photos,omitempty"`
+	OrdersAndRequests []OrderAndRequest `gorm:"foreignKey:RepairHistoryNo;references:RepairHistoryNo" json:"orders_and_requests,omitempty"`
 }
 
 func (RepairHistory) TableName() string {

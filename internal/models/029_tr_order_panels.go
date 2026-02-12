@@ -44,6 +44,9 @@ type OrderPanel struct {
 	FinalMeasurement     *Measurement  `gorm:"foreignKey:FinalMeasurementNo;references:MeasurementNo" json:"final_measurement,omitempty"`
 	CreatedByUser        *User         `gorm:"foreignKey:CreatedBy;references:UserNo" json:"created_by_user,omitempty"`
 	LastModifiedByUser   *User         `gorm:"foreignKey:LastModifiedBy;references:UserNo" json:"last_modified_by_user,omitempty"`
+
+	RepairHistory      []RepairHistory      `gorm:"foreignKey:OrderPanelNo;references:OrderPanelNo" json:"repair_history,omitempty"`
+	NegotiationHistory []NegotiationHistory `gorm:"foreignKey:OrderPanelNo;references:OrderPanelNo" json:"negotiation_history,omitempty"`
 }
 
 func (OrderPanel) TableName() string {

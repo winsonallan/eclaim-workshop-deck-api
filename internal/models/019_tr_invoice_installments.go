@@ -15,9 +15,10 @@ type InvoiceInstallment struct {
 	UpdatedAt           time.Time `gorm:"column:last_modified_date;null;type:datetime;default:CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP" json:"last_modified_date"`
 	LastModifiedBy      *uint     `gorm:"column:last_modified_by;null;type:int(11)" json:"last_modified_by"`
 
-	Invoice            *Invoice `gorm:"foreignKey:InvoiceNo;references:InvoiceNo" json:"invoice,omitempty"`
-	CreatedByUser      *User    `gorm:"foreignKey:CreatedBy;references:UserNo" json:"created_by_user,omitempty"`
-	LastModifiedByUser *User    `gorm:"foreignKey:LastModifiedBy;references:UserNo" json:"last_modified_by_user,omitempty"`
+	Invoice            *Invoice        `gorm:"foreignKey:InvoiceNo;references:InvoiceNo" json:"invoice,omitempty"`
+	PaymentRecords     []PaymentRecord `gorm:"foreignKey:InstallmentNo;references:InstallmentNo;" json:"payment_records,omitempty"`
+	CreatedByUser      *User           `gorm:"foreignKey:CreatedBy;references:UserNo" json:"created_by_user,omitempty"`
+	LastModifiedByUser *User           `gorm:"foreignKey:LastModifiedBy;references:UserNo" json:"last_modified_by_user,omitempty"`
 }
 
 func (InvoiceInstallment) TableName() string {

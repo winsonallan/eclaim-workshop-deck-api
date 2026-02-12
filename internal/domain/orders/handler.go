@@ -28,6 +28,24 @@ func (h *Handler) GetOrders(c *gin.Context) {
 	response.Success(c, http.StatusOK, "Orders Retrieved Successfully", gin.H{"orders": orders})
 }
 
+func (h *Handler) ViewOrderDetails(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid order no")
+		return
+	}
+
+	orders, err := h.service.ViewOrderDetails(uint(id))
+
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Orders Retrieved Successfully", gin.H{"orders": orders})
+}
+
 func (h *Handler) GetIncomingOrders(c *gin.Context) {
 	woIDStr := c.Query("workshop_no")
 
@@ -84,4 +102,38 @@ func (h *Handler) CreateOrder(c *gin.Context) {
 	}
 
 	response.Success(c, http.StatusCreated, "order created successfully", gin.H{"orders": order})
+}
+
+func (h *Handler) ProposeAdditionalWork(c *gin.Context) {
+	var req ProposeAdditionalWorkRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	workOrder, err := h.service.ProposeAdditionalWork(req)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusCreated, "additional work proposed successfully", gin.H{"work_order": workOrder})
+}
+
+func (h *Handler) CreateWorkOrder(c *gin.Context) {
+	var req CreateWorkOrderRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	workOrder, err := h.service.CreateWorkOrder(req)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusCreated, "work order created successfully", gin.H{"work_order": workOrder})
 }

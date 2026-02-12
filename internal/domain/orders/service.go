@@ -24,6 +24,10 @@ func (s *Service) GetIncomingOrders(workshopId uint) ([]models.Order, error) {
 	return s.repo.GetIncomingOrders(workshopId)
 }
 
+func (s *Service) ViewOrderDetails(orderNo uint) (models.Order, error) {
+	return s.repo.ViewOrderDetails(orderNo)
+}
+
 func (s *Service) prepareClient(req AddClientRequest) (*models.Client, error) {
 	var client *models.Client
 
@@ -148,4 +152,90 @@ func (s *Service) CreateOrder(req CreateOrderRequest) (*models.Order, error) {
 	}
 
 	return s.repo.FindOrderById(order.OrderNo)
+}
+
+func (s *Service) ProposeAdditionalWork(req ProposeAdditionalWorkRequest) (*models.WorkOrder, error) {
+	if req.LastModifiedBy == 0 {
+		return nil, errors.New("last modified by is needed")
+	}
+
+	if len(req.OrderPanels) == 0 {
+		return nil, errors.New("order panels are needed")
+	}
+
+	workOrder, err := s.repo.FindWorkOrderById(uint(req.WorkOrderNo))
+
+	if err != nil {
+		return nil, err
+	}
+
+	workOrder.LastModifiedBy = &req.LastModifiedBy
+
+	var allPanels []*models.OrderPanel
+
+	for _, o := range req.OrderPanels {
+		orderPanel, err := s.prepareOrderPanels(o, req.LastModifiedBy, req.WorkOrderNo)
+
+		if err != nil {
+			return nil, err
+		}
+
+		allPanels = append(allPanels, orderPanel)
+	}
+
+	if err := s.repo.CreateOrderPanelsBatch(allPanels); err != nil {
+		return nil, err
+	}
+
+	if err := s.repo.UpdateWorkOrder(workOrder); err != nil {
+		return nil, err
+	}
+
+	return workOrder, nil
+}
+
+func (s *Service) CreateWorkOrder(req CreateWorkOrderRequest) (*models.WorkOrder, error) {
+	if req.CreatedBy == 0 {
+		return nil, errors.New("created by is needed")
+	}
+
+	if len(req.OrderPanels) == 0 {
+		return nil, errors.New("order panels are needed")
+	}
+
+	workOrder := &models.WorkOrder{
+		OrderNo:                  req.OrderNo,
+		CreatedBy:                &req.CreatedBy,
+		AdditionalWorkOrderCount: 0,
+	}
+
+	if req.AdditionalWorkOrderCount != 0 {
+		workOrder.AdditionalWorkOrderCount = req.AdditionalWorkOrderCount
+	}
+
+	if req.WorkOrderDocumentNumber != "" {
+		workOrder.WorkOrderDocumentNumber = req.WorkOrderDocumentNumber
+	}
+
+	if req.WorkOrderUrl != "" {
+		workOrder.WorkOrderUrl = req.WorkOrderUrl
+	}
+
+	var allPanels []*models.OrderPanel
+
+	for _, o := range req.OrderPanels {
+		orderPanel, err := s.prepareOrderPanels(o, req.CreatedBy, workOrder.WorkOrderNo)
+
+		if err != nil {
+			return nil, err
+		}
+
+		allPanels = append(allPanels, orderPanel)
+	}
+
+	if err := s.repo.CreateOrderPanelsBatch(allPanels); err != nil {
+		return nil, err
+	}
+
+	return workOrder, nil
 }

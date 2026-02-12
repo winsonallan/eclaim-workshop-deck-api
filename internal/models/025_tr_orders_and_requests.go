@@ -13,9 +13,11 @@ type OrderAndRequest struct {
 	UpdatedAt       time.Time `gorm:"column:last_modified_date;null;type:datetime;default:CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP" json:"last_modified_date"`
 	LastModifiedBy  *uint     `gorm:"column:last_modified_by;null;type:int(11)" json:"last_modified_by"`
 
-	RepairHistory      *RepairHistory `gorm:"foreignKey:RepairHistoryNo;references:RepairHistoryNo;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	RepairHistory      *RepairHistory `gorm:"foreignKey:RepairHistoryNo;references:RepairHistoryNo;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"repair_history,omitempty"`
 	CreatedByUser      *User          `gorm:"foreignKey:CreatedBy;references:UserNo" json:"created_by_user,omitempty"`
 	LastModifiedByUser *User          `gorm:"foreignKey:LastModifiedBy;references:UserNo" json:"last_modified_by_user,omitempty"`
+
+	SparePartQuotes []SparePartQuote `gorm:"foreignKey:OrderRequestNo;references:OrderRequestNo;" json:"spare_part_quotes,omitempty"`
 }
 
 func (OrderAndRequest) TableName() string {

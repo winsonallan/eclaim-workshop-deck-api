@@ -21,6 +21,9 @@ type Invoice struct {
 	Client             *Client   `gorm:"foreignKey:ClientNo;references:ClientNo" json:"client,omitempty"`
 	CreatedByUser      *User     `gorm:"foreignKey:CreatedBy;references:UserNo" json:"created_by_user,omitempty"`
 	LastModifiedByUser *User     `gorm:"foreignKey:LastModifiedBy;references:UserNo" json:"last_modified_by_user,omitempty"`
+
+	InvoiceInstallments []InvoiceInstallment `gorm:"foreignKey:InvoiceNo;references:InvoiceNo" json:"invoice_installments,omitempty"`
+	PaymentRecords      []PaymentRecord      `gorm:"foreignKey:InvoiceNo;references:InvoiceNo" json:"payment_records,omitempty"`
 }
 
 func (Invoice) TableName() string {
