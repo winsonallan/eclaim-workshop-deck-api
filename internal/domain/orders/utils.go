@@ -29,6 +29,7 @@ func (s *Service) prepareOrderPanels(req OrderPanelRequest, createdBy, workOrder
 		}
 
 		orderPanel.InsurancePanelName = insurancePanel.WorkshopPanels.PanelName
+		orderPanel.InsurerServiceType = insurancePanel.ServiceType
 
 		switch insurancePanel.ServiceType {
 		case "repair":
@@ -67,6 +68,7 @@ func (s *Service) prepareOrderPanels(req OrderPanelRequest, createdBy, workOrder
 		}
 
 		orderPanel.WorkshopPanelName = workshopPanel.WorkshopPanels.PanelName
+		orderPanel.WorkshopServiceType = workshopPanel.ServiceType
 
 		switch workshopPanel.ServiceType {
 		case "repair":

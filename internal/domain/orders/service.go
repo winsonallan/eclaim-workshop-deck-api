@@ -169,6 +169,9 @@ func (s *Service) ProposeAdditionalWork(req ProposeAdditionalWorkRequest) (*mode
 		return nil, err
 	}
 
+	var currentWOGroup = &workOrder.AdditionalWorkOrderCount
+
+	workOrder.AdditionalWorkOrderCount = *currentWOGroup + 1
 	workOrder.LastModifiedBy = &req.LastModifiedBy
 
 	var allPanels []*models.OrderPanel
