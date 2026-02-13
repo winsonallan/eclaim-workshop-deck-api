@@ -128,6 +128,7 @@ func (r *Repository) FindPanelPricingById(id uint) (*models.PanelPricing, error)
 		Preload("CreatedByUser").
 		Preload("Mou").
 		Preload("WorkshopPanels").
+		Preload("Measurements").
 		Where("panel_pricing_no", id).
 		First(&panelPricing).Error
 

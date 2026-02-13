@@ -221,6 +221,10 @@ func (s *Service) CreateWorkOrder(req CreateWorkOrderRequest) (*models.WorkOrder
 		workOrder.WorkOrderUrl = req.WorkOrderUrl
 	}
 
+	if err := s.repo.CreateWorkOrder(workOrder); err != nil {
+		return nil, err
+	}
+
 	var allPanels []*models.OrderPanel
 
 	for _, o := range req.OrderPanels {

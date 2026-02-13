@@ -1,12 +1,14 @@
 package orders
 
 import (
+	"eclaim-workshop-deck-api/internal/domain/panels"
 	"eclaim-workshop-deck-api/internal/models"
+	"errors"
 )
 
 func (s *Service) prepareOrderPanels(req OrderPanelRequest, createdBy, workOrderNo uint) (*models.OrderPanel, error) {
+	panelService := panels.NewRepository(s.repo.db)
 
-	// 1. Mapping
 	orderPanel := &models.OrderPanel{
 		WorkOrderNo:          workOrderNo,
 		CreatedBy:            &createdBy,
@@ -19,22 +21,36 @@ func (s *Service) prepareOrderPanels(req OrderPanelRequest, createdBy, workOrder
 
 	if req.InsurancePanelPricingNo != 0 {
 		orderPanel.InsurancePanelPricingNo = &req.InsurancePanelPricingNo
-	}
 
-	if req.InsurancePanelName != "" {
-		orderPanel.InsurancePanelName = req.InsurancePanelName
-	}
+		insurancePanel, err := panelService.FindPanelPricingById(req.InsurancePanelPricingNo)
 
-	if req.InsurerPrice != 0 {
-		orderPanel.InsurerPrice = req.InsurerPrice
-	}
+		if err != nil {
+			return nil, errors.New("insurance panel pricing no is invalid")
+		}
 
-	if req.InsurerMeasurementNo != 0 {
-		orderPanel.InsurerMeasurementNo = &req.InsurerMeasurementNo
-	}
+		orderPanel.InsurancePanelName = insurancePanel.WorkshopPanels.PanelName
 
-	if req.InsurerServiceType != "" {
-		orderPanel.InsurerServiceType = req.InsurerServiceType
+		switch insurancePanel.ServiceType {
+		case "repair":
+			if req.InsurerMeasurementNo != 0 {
+				orderPanel.InsurerMeasurementNo = &req.InsurerMeasurementNo
+
+				var chosenMeasurement models.Measurement
+				for _, m := range insurancePanel.Measurements {
+					if m.MeasurementNo == *orderPanel.InsurerMeasurementNo {
+						chosenMeasurement = m
+					}
+				}
+
+				orderPanel.InsurerPrice = chosenMeasurement.LaborFee
+			} else {
+				orderPanel.InsurerPrice = insurancePanel.LaborFee
+			}
+		case "replacement":
+			orderPanel.InsurerPrice = insurancePanel.LaborFee + insurancePanel.SparePartCost
+		default:
+			return nil, errors.New("service type error while preparing order panels (insurance panel)")
+		}
 	}
 
 	if req.InsurerQty != 0 {
@@ -43,22 +59,36 @@ func (s *Service) prepareOrderPanels(req OrderPanelRequest, createdBy, workOrder
 
 	if req.WorkshopPanelPricingNo != 0 {
 		orderPanel.WorkshopPanelPricingNo = &req.WorkshopPanelPricingNo
-	}
 
-	if req.WorkshopPanelName != "" {
-		orderPanel.WorkshopPanelName = req.WorkshopPanelName
-	}
+		workshopPanel, err := panelService.FindPanelPricingById(req.WorkshopPanelPricingNo)
 
-	if req.WorkshopPrice != 0 {
-		orderPanel.WorkshopPrice = req.WorkshopPrice
-	}
+		if err != nil {
+			return nil, errors.New("insurance panel pricing no is invalid")
+		}
 
-	if req.WorkshopMeasurementNo != 0 {
-		orderPanel.WorkshopMeasurementNo = &req.WorkshopMeasurementNo
-	}
+		orderPanel.WorkshopPanelName = workshopPanel.WorkshopPanels.PanelName
 
-	if req.WorkshopServiceType != "" {
-		orderPanel.WorkshopServiceType = req.WorkshopServiceType
+		switch workshopPanel.ServiceType {
+		case "repair":
+			if req.WorkshopMeasurementNo != 0 {
+				orderPanel.WorkshopMeasurementNo = &req.WorkshopMeasurementNo
+
+				var chosenMeasurement models.Measurement
+				for _, m := range workshopPanel.Measurements {
+					if m.MeasurementNo == *orderPanel.WorkshopMeasurementNo {
+						chosenMeasurement = m
+					}
+				}
+
+				orderPanel.WorkshopPrice = chosenMeasurement.LaborFee
+			} else {
+				orderPanel.WorkshopPrice = workshopPanel.LaborFee
+			}
+		case "replacement":
+			orderPanel.WorkshopPrice = workshopPanel.LaborFee + workshopPanel.SparePartCost
+		default:
+			return nil, errors.New("service type error while preparing order panels (insurance panel)")
+		}
 	}
 
 	if req.WorkshopQty != 0 {
