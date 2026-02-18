@@ -68,6 +68,7 @@ func (r *Repository) GetMOUs(insID, woID, mouID uint, activeOnly bool) ([]models
 func (r *Repository) GetPanelPricings(insID, woID, mouID uint) ([]models.PanelPricing, error) {
 	var panelPricings []models.PanelPricing
 	query := r.db.
+		Joins("LEFT JOIN r_workshop_panels ON r_workshop_panels.workshop_panel_no = r_panel_pricing.workshop_panel_no").
 		Preload("Insurer").
 		Preload("Workshop").
 		Preload("WorkshopPanels").
@@ -78,30 +79,35 @@ func (r *Repository) GetPanelPricings(insID, woID, mouID uint) ([]models.PanelPr
 
 	// Add filters only if the ID is provided (not 0)
 	if insID != 0 {
-		query = query.Where("insurer_no = ?", insID)
+		query = query.Where("r_panel_pricing.insurer_no = ?", insID)
 	}
 	if woID != 0 {
-		query = query.Where("workshop_no = ?", woID)
+		query = query.Where("r_panel_pricing.workshop_no = ?", woID)
 	}
 	if mouID != 0 {
-		query = query.Where("mou_no = ?", mouID)
+		query = query.Where("r_panel_pricing.mou_no = ?", mouID)
 	}
 
-	err := query.Find(&panelPricings).Error
+	err := query.
+		Order("r_workshop_panels.panel_name ASC").
+		Find(&panelPricings).Error
+
 	return panelPricings, err
 }
 
 func (r *Repository) GetWorkshopPanelPricings(woID uint) ([]models.PanelPricing, error) {
 	var panelPricings []models.PanelPricing
-	query := r.db.
+	err := r.db.
+		Joins("LEFT JOIN r_workshop_panels ON r_workshop_panels.workshop_panel_no = r_panel_pricing.workshop_panel_no").
 		Preload("Workshop").
 		Preload("WorkshopPanels").
 		Preload("CreatedByUser").
 		Preload("LastModifiedByUser").
 		Preload("Measurements", "is_locked = ?", false).
-		Where("insurer_no IS NULL AND mou_no IS NULL AND workshop_no = ? AND is_locked = 0", woID)
+		Where("r_panel_pricing.insurer_no IS NULL AND r_panel_pricing.mou_no IS NULL AND r_panel_pricing.workshop_no = ? AND r_panel_pricing.is_locked = 0", woID).
+		Order("r_workshop_panels.panel_name ASC").
+		Find(&panelPricings).Error
 
-	err := query.Find(&panelPricings).Error
 	return panelPricings, err
 }
 

@@ -38,7 +38,7 @@ func LoadConfig() *Config {
 		DBUser:       getEnv("DB_USER", "root"),
 		DBPassword:   getEnv("DB_PASSWORD", ""),
 		DBName:       getEnv("DB_NAME", "workshop_deck_2025"),
-		JWTSecret:    getEnv("JWT_SECRET", "your-super-secret-jwt-key-change-this-in-production"),
+		JWTSecret:    getEnv("JWT_SECRET", "super-secret-jwt-lmao"),
 		Port:         getEnv("PORT", "8080"),
 		FrontendURLs: frontendURLs,
 	}
