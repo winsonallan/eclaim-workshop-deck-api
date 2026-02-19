@@ -1,6 +1,14 @@
 package main
 
 import (
+	"context"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"eclaim-workshop-deck-api/internal/bootstrap"
 	"eclaim-workshop-deck-api/internal/config"
 	"eclaim-workshop-deck-api/internal/domain/admin"
@@ -14,7 +22,6 @@ import (
 	"eclaim-workshop-deck-api/internal/domain/suppliers"
 	"eclaim-workshop-deck-api/internal/domain/usermanagement"
 	"eclaim-workshop-deck-api/internal/middleware"
-	"log"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -37,11 +44,22 @@ func main() {
 
 	r := gin.New()
 
-	// Global middleware — order matters
-	r.Use(middleware.RequestID())    // ← new
-	r.Use(middleware.Logger(logger)) // ← new (your structured logger)
-	r.Use(gin.Recovery())            // ← replaces the one from gin.Default()
+	rateLimiter, err := middleware.RateLimiter("100-M") // 100 requests per minute per IP
+	if err != nil {
+		logger.Fatal("failed to initialize rate limiter", zap.Error(err))
+	}
+
+	r.Use(middleware.RequestID())
+	r.Use(middleware.Logger(logger))
+	r.Use(gin.Recovery())
 	r.Use(middleware.CORSMiddleware(cfg.FrontendURLs))
+	r.Use(rateLimiter)
+	r.Use(middleware.SecurityHeaders(cfg.Env))
+
+	// Health check — outside /api so it doesn't require an API key
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok", "time": time.Now()})
+	})
 
 	api := r.Group("/api")
 	api.Use(middleware.APIKeyMiddleware(db))
@@ -59,9 +77,31 @@ func main() {
 	usermanagement.RegisterRoutes(api, domains.UserManagementHandler, authMiddleware)
 	orders.RegisterRoutes(api, domains.OrdersHandler, authMiddleware)
 
-	// ✅ Use logger instead of log.Printf for consistency
-	logger.Info("server starting", zap.String("port", cfg.Port))
-	if err := r.Run(":" + cfg.Port); err != nil {
-		logger.Fatal("server failed to start", zap.Error(err))
+	srv := &http.Server{
+		Addr:    ":" + cfg.Port,
+		Handler: r,
 	}
+
+	go func() {
+		logger.Info("server starting", zap.String("port", cfg.Port))
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Fatal("server failed to start", zap.Error(err))
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	logger.Info("shutdown signal received, draining in-flight requests...")
+
+	// Give 10 seconds to finish remaining requests
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		logger.Fatal("forced shutdown due to timeout", zap.Error(err))
+	}
+
+	logger.Info("server shut down cleanly")
 }
