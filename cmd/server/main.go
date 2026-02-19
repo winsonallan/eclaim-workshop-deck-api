@@ -29,6 +29,9 @@ import (
 
 func main() {
 	cfg := config.LoadConfig()
+	if err := cfg.Validate(); err != nil {
+		log.Fatal("invalid config: ", err)
+	}
 
 	logger, err := config.NewLogger(cfg.Env)
 	if err != nil {

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -19,6 +20,28 @@ type Config struct {
 	FrontendURLs []string
 	Env          string
 	GinMode      string
+}
+
+func (c *Config) Validate() error {
+	required := map[string]string{
+		"JWT_SECRET":  c.JWTSecret,
+		"DB_HOST":     c.DBHost,
+		"DB_USER":     c.DBUser,
+		"DB_PASSWORD": c.DBPassword,
+		"DB_NAME":     c.DBName,
+	}
+
+	for key, val := range required {
+		if val == "" {
+			return fmt.Errorf("required environment variable %s is not set", key)
+		}
+	}
+
+	if c.JWTSecret == "super-secret-jwt-lmao" && c.Env == "production" {
+		return fmt.Errorf("JWT_SECRET appears to be the default value — do not use in production")
+	}
+
+	return nil
 }
 
 func LoadConfig() *Config {
