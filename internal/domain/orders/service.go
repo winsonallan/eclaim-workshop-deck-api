@@ -178,6 +178,7 @@ func (s *Service) ProposeAdditionalWork(req ProposeAdditionalWorkRequest) (*mode
 
 	for _, o := range req.OrderPanels {
 		orderPanel, err := s.prepareOrderPanels(o, req.LastModifiedBy, req.WorkOrderNo)
+		orderPanel.NegotiationStatus = "proposed_additional"
 
 		if err != nil {
 			return nil, err

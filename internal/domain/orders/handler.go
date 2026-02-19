@@ -6,21 +6,28 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type Handler struct {
 	service *Service
+	log     *zap.Logger
 }
 
-func NewHandler(service *Service) *Handler {
-	return &Handler{service: service}
+func NewHandler(service *Service, log *zap.Logger) *Handler {
+	return &Handler{service: service, log: log}
 }
 
 // Read
 func (h *Handler) GetOrders(c *gin.Context) {
+	log := h.log.With(
+		zap.String("requestID", c.GetString("requestID")),
+	)
+
 	orders, err := h.service.GetOrders()
 
 	if err != nil {
+		log.Error("failed to do get orders", zap.Error(err))
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}

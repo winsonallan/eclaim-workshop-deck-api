@@ -20,8 +20,8 @@ func GenerateToken(userNo uint, secret string) (string, error) {
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(now.Add(15 * time.Minute)), // Shorter expiry
 			IssuedAt:  jwt.NewNumericDate(now),
-			NotBefore: jwt.NewNumericDate(now), // Token valid from now
-			Issuer:    "workshop-deck",         // Optional but recommended
+			NotBefore: jwt.NewNumericDate(now),
+			Issuer:    "workshop-deck",
 		},
 	}
 

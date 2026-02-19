@@ -5,14 +5,16 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type Handler struct {
 	service *Service
+	log     *zap.Logger
 }
 
-func NewHandler(service *Service) *Handler {
-	return &Handler{service: service}
+func NewHandler(service *Service, log *zap.Logger) *Handler {
+	return &Handler{service: service, log: log}
 }
 
 func (h *Handler) CreateUserProfile(c *gin.Context) {

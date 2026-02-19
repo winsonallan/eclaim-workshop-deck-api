@@ -8,10 +8,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type Handler struct {
 	service *Service
+	log     *zap.Logger
 }
 
 type GenerateAPIKeyRequest struct {
@@ -20,9 +22,8 @@ type GenerateAPIKeyRequest struct {
 	ExpiresIn   int    `json:"expires_in_days"` // Optional: days until expiration (0 = never)
 }
 
-
-func NewHandler(service *Service) *Handler {
-	return &Handler{service: service}
+func NewHandler(service *Service, log *zap.Logger) *Handler {
+	return &Handler{service: service, log: log}
 }
 
 func (h *Handler) Register(c *gin.Context) {

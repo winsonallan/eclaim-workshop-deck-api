@@ -17,6 +17,8 @@ type Config struct {
 	JWTSecret    string
 	Port         string
 	FrontendURLs []string
+	Env          string
+	GinMode      string
 }
 
 func LoadConfig() *Config {
@@ -41,6 +43,8 @@ func LoadConfig() *Config {
 		JWTSecret:    getEnv("JWT_SECRET", "super-secret-jwt-lmao"),
 		Port:         getEnv("PORT", "8080"),
 		FrontendURLs: frontendURLs,
+		Env:          getEnv("APP_ENV", "development"),
+		GinMode:      getEnv("GIN_MODE", "debug"),
 	}
 }
 

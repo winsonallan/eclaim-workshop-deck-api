@@ -17,21 +17,30 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 func main() {
-	// Load config
 	cfg := config.LoadConfig()
 
-	// Connect DB
+	logger, err := config.NewLogger(cfg.Env)
+	if err != nil {
+		log.Fatal("failed to initialize logger: ", err)
+	}
+	defer logger.Sync()
+
+	gin.SetMode(cfg.GinMode)
+
 	db := config.ConnectDB(cfg)
 
-	db.Debug()
-	// Init domains
-	domains := bootstrap.InitDomains(db, cfg)
+	domains := bootstrap.InitDomains(db, cfg, logger)
 
-	// Setup Gin
-	r := gin.Default()
+	r := gin.New()
+
+	// Global middleware — order matters
+	r.Use(middleware.RequestID())    // ← new
+	r.Use(middleware.Logger(logger)) // ← new (your structured logger)
+	r.Use(gin.Recovery())            // ← replaces the one from gin.Default()
 	r.Use(middleware.CORSMiddleware(cfg.FrontendURLs))
 
 	api := r.Group("/api")
@@ -42,9 +51,7 @@ func main() {
 	authdemo.RegisterRoutes(api, domains.AuthDemoHandler, authMiddleware)
 	posts.RegisterRoutes(api, domains.PostsHandler, authMiddleware)
 	auth.RegisterRoutes(api, domains.AuthHandler, authMiddleware)
-
 	admin.RegisterRoutes(api, domains.AdminsHandler, authMiddleware)
-
 	panels.RegisterRoutes(api, domains.PanelsHandler, authMiddleware)
 	settings.RegisterRoutes(api, domains.SettingsHandler, authMiddleware)
 	location.RegisterRoutes(api, domains.LocationHandler, authMiddleware)
@@ -52,9 +59,9 @@ func main() {
 	usermanagement.RegisterRoutes(api, domains.UserManagementHandler, authMiddleware)
 	orders.RegisterRoutes(api, domains.OrdersHandler, authMiddleware)
 
-	// Start server
-	log.Printf("Server starting on port %s", cfg.Port)
+	// ✅ Use logger instead of log.Printf for consistency
+	logger.Info("server starting", zap.String("port", cfg.Port))
 	if err := r.Run(":" + cfg.Port); err != nil {
-		log.Fatal(err)
+		logger.Fatal("server failed to start", zap.Error(err))
 	}
 }
