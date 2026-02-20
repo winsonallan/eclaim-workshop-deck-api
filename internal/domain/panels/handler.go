@@ -164,6 +164,57 @@ func (h *Handler) GetAllWorkshopPanelPricings(c *gin.Context) {
 	response.Success(c, http.StatusOK, "Workshop Panel Pricingss Retrieved Successfully", gin.H{"panel_pricing": panelPricings})
 }
 
+func (h *Handler) GetAllPanelPricingsForNegotiation(c *gin.Context) {
+	// 1. Get query params
+	insIDStr := c.Query("insurer_no")
+	woIDStr := c.Query("workshop_no")
+	mouIDStr := c.Query("mou_no")
+
+	// 2. Validate: Must have at least one ID
+	if mouIDStr == "" && insIDStr == "" && woIDStr == "" {
+		response.Error(c, http.StatusBadRequest, "Either mou_no, insurer_no or workshop_no must be provided")
+		return
+	}
+
+	// 3. Parse strings to uint (handling potential parsing errors)
+	var insID, woID, mouID uint64
+	var err error
+
+	if insIDStr != "" {
+		insID, err = strconv.ParseUint(insIDStr, 10, 32)
+		if err != nil {
+			response.Error(c, http.StatusBadRequest, "Invalid insurer_no format")
+			return
+		}
+	}
+
+	if woIDStr != "" {
+		woID, err = strconv.ParseUint(woIDStr, 10, 32)
+		if err != nil {
+			response.Error(c, http.StatusBadRequest, "Invalid workshop_no format")
+			return
+		}
+	}
+
+	if mouIDStr != "" {
+		mouID, err = strconv.ParseUint(mouIDStr, 10, 32)
+		if err != nil {
+			response.Error(c, http.StatusBadRequest, "Invalid mou_no format")
+			return
+		}
+	}
+
+	// 4. Call Service
+	panelPricings, err := h.service.GetAllPanelPricingsForNegotiation(uint(insID), uint(woID), uint(mouID))
+
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Panel Pricingss Retrieved Successfully", gin.H{"panel_pricing": panelPricings})
+}
+
 // Create
 func (h *Handler) CreateMOU(c *gin.Context) {
 	var req CreateMOURequest

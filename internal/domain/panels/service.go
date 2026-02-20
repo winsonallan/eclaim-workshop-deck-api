@@ -32,6 +32,10 @@ func (s *Service) GetPanelPricings(insurerId, workshopId, mouId uint) ([]models.
 	return s.repo.GetPanelPricings(insurerId, workshopId, mouId)
 }
 
+func (s *Service) GetAllPanelPricingsForNegotiation(insurerId, workshopId, mouId uint) ([]models.PanelPricing, error) {
+	return s.repo.GetAllPanelPricingsForNegotiation(insurerId, workshopId, mouId)
+}
+
 func (s *Service) GetWorkshopPanelPricings(workshopId uint) ([]models.PanelPricing, error) {
 	return s.repo.GetWorkshopPanelPricings(workshopId)
 }

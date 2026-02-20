@@ -14,6 +14,7 @@ func RegisterRoutes(router *gin.RouterGroup, handler *Handler, authMiddleware gi
 			{
 				panelsPricing.GET("/workshop/:id", handler.GetAllWorkshopPanelPricings)
 				panelsPricing.GET("", handler.GetPanelPricings)
+				panelsPricing.GET("/nego/all", handler.GetAllPanelPricingsForNegotiation)
 				panelsPricing.POST("", handler.CreatePanelPricing)
 				panelsPricing.PUT("/:id", handler.UpdatePanelPricing)
 				panelsPricing.DELETE("/:id", handler.DeletePanelPricing)
