@@ -75,7 +75,7 @@ func (r *Repository) GetPanelPricings(insID, woID, mouID uint) ([]models.PanelPr
 		Preload("Mou").
 		Preload("CreatedByUser").
 		Preload("LastModifiedByUser").
-		Preload("Measurements")
+		Preload("Measurements", "is_locked = ?", false)
 
 	// Add filters only if the ID is provided (not 0)
 	if insID != 0 {
@@ -106,7 +106,7 @@ func (r *Repository) GetAllPanelPricingsForNegotiation(insID, woID, mouID uint) 
 		Preload("Mou").
 		Preload("CreatedByUser").
 		Preload("LastModifiedByUser").
-		Preload("Measurements")
+		Preload("Measurements", "is_locked = ?", false)
 
 	// Add filters only if the ID is provided (not 0)
 	if insID != 0 {
