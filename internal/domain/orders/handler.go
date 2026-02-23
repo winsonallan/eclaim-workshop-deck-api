@@ -144,3 +144,50 @@ func (h *Handler) CreateWorkOrder(c *gin.Context) {
 
 	response.Success(c, http.StatusCreated, "work order created successfully", gin.H{"work_order": workOrder})
 }
+
+// Update
+func (h *Handler) AcceptOrder(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid order no")
+		return
+	}
+
+	var req AcceptDeclineOrder
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	order, err := h.service.AcceptOrder(uint(id), req)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Order successfully accepted", gin.H{"order": order})
+}
+
+func (h *Handler) DeclineOrder(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid order no")
+		return
+	}
+
+	var req AcceptDeclineOrder
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	order, err := h.service.DeclineOrder(uint(id), req)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Order successfully accepted", gin.H{"order": order})
+}

@@ -56,3 +56,7 @@ type ProposeAdditionalWorkRequest struct {
 
 	LastModifiedBy uint `json:"last_modified_by"`
 }
+
+type AcceptDeclineOrder struct {
+	LastModifiedBy uint `json:"last_modified_by"`
+}

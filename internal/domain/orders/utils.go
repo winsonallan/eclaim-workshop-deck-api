@@ -111,3 +111,55 @@ func (s *Service) prepareOrderPanels(req OrderPanelRequest, createdBy, workOrder
 
 	return orderPanel, nil
 }
+
+func (s *Service) prepareClient(req AddClientRequest) (*models.Client, error) {
+	var client *models.Client
+
+	if req.ClientName == "" {
+		return nil, errors.New("client name is required")
+	}
+	if req.ClientPhone == "" {
+		return nil, errors.New("client email is required")
+	}
+	if req.CityNo == 0 {
+		return nil, errors.New("city no is required")
+	}
+	if req.CityName == "" {
+		return nil, errors.New("city name is required")
+	}
+	if req.VehicleBrandName == "" {
+		return nil, errors.New("vehicle brand is required")
+	}
+	if req.VehicleSeriesName == "" {
+		return nil, errors.New("vehicle series name is required")
+	}
+	if req.VehicleChassisNo == "" {
+		return nil, errors.New("vehicle chassis no is required")
+	}
+	if req.VehicleLicensePlate == "" {
+		return nil, errors.New("vehicle license plate is required")
+	}
+	if req.VehiclePrice == 0 {
+		return nil, errors.New("vehicle price is required")
+	}
+
+	client = &models.Client{
+		ClientName:          req.ClientName,
+		ClientPhone:         req.ClientPhone,
+		CityNo:              req.CityNo,
+		CityType:            req.CityType,
+		CityName:            req.CityName,
+		Address:             req.Address,
+		VehicleBrandName:    req.VehicleBrandName,
+		VehicleSeriesName:   req.VehicleSeriesName,
+		VehicleChassisNo:    req.VehicleChassisNo,
+		VehicleLicensePlate: req.VehicleLicensePlate,
+		VehiclePrice:        req.VehiclePrice,
+	}
+
+	if req.ClientEmail != "" {
+		client.ClientEmail = req.ClientEmail
+	}
+
+	return client, nil
+}

@@ -134,3 +134,11 @@ func (r *Repository) CreateOrderPanelsBatch(orderPanels []*models.OrderPanel) er
 func (r *Repository) UpdateWorkOrder(workOrder *models.WorkOrder) error {
 	return r.db.Save(workOrder).Error
 }
+
+func (r *Repository) UpdateOrderPanel(orderPanel *models.OrderPanel) error {
+	return r.db.Save(orderPanel).Error
+}
+
+func (r *Repository) UpdateOrder(order *models.Order) error {
+	return r.db.Save(order).Error
+}

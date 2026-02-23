@@ -21,6 +21,7 @@ type NegotiationHistory struct {
 	InsuranceNotes         string    `gorm:"type:varchar(255);null" json:"insurance_notes"`
 	DecidedBy              uint      `gorm:"type:int(11);null" json:"decided_by"`
 	CompletedDate          time.Time `gorm:"type:datetime;null" json:"completed_date"`
+	IsLocked               bool      `gorm:"type:tinyint(1);default:0;not null" json:"is_locked"`
 	CreatedAt              time.Time `gorm:"column:created_date;type:datetime;default:CURRENT_TIMESTAMP" json:"created_date"`
 	CreatedBy              *uint     `gorm:"column:created_by;type:int(11);null" json:"created_by"`
 	UpdatedAt              time.Time `gorm:"column:last_modified_date;null;type:datetime;default:CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP" json:"last_modified_date"`
