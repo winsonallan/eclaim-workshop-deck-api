@@ -27,7 +27,7 @@ type OrderPanel struct {
 	FinalQty                uint      `gorm:"type:int(11);null" json:"final_qty"`
 	IsIncluded              bool      `gorm:"type:tinyint(1);default:1;not null" json:"is_included"`
 	IsSpecialRepair         bool      `gorm:"type:tinyint(1);default:0;not null" json:"is_special_repair"`
-	NegotiationStatus       string    `gorm:"type:enum('pending_workshop','negotiating','additional_work','accepted','rejected');default:pending_workshop;not null" json:"negotiation_status"`
+	NegotiationStatus       string    `gorm:"type:enum('pending_workshop','negotiating','proposed_additional','additional_work','accepted','rejected');default:pending_workshop;not null" json:"negotiation_status"`
 	CompletionStatus        string    `gorm:"type:enum('incomplete','pending_sparepart','completed');null" json:"completion_status"`
 	IsLocked                bool      `gorm:"type:tinyint(1);default:0;not null" json:"is_locked"`
 	CreatedAt               time.Time `gorm:"column:created_date;type:datetime;default:CURRENT_TIMESTAMP" json:"created_date"`

@@ -12,6 +12,7 @@ import (
 	"eclaim-workshop-deck-api/internal/domain/settings"
 	"eclaim-workshop-deck-api/internal/domain/suppliers"
 	"eclaim-workshop-deck-api/internal/domain/usermanagement"
+	"eclaim-workshop-deck-api/pkg/utils"
 
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -30,7 +31,7 @@ type Domains struct {
 	OrdersHandler         *orders.Handler
 }
 
-func InitDomains(db *gorm.DB, cfg *config.Config, log *zap.Logger) *Domains {
+func InitDomains(db *gorm.DB, cfg *config.Config, log *zap.Logger, localStorage *utils.LocalStorage) *Domains {
 	// Auth Demo
 	authDemoRepo := authdemo.NewRepository(db)
 	authDemoService := authdemo.NewService(authDemoRepo, cfg.JWTSecret)
@@ -78,7 +79,7 @@ func InitDomains(db *gorm.DB, cfg *config.Config, log *zap.Logger) *Domains {
 	// Orders
 	ordersRepo := orders.NewRepository(db)
 	ordersService := orders.NewService(ordersRepo)
-	ordersHandler := orders.NewHandler(ordersService, log)
+	ordersHandler := orders.NewHandler(ordersService, log, localStorage)
 
 	return &Domains{
 		AuthDemoHandler:       authDemoHandler,

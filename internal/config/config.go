@@ -20,6 +20,8 @@ type Config struct {
 	FrontendURLs []string
 	Env          string
 	GinMode      string
+	UploadPath   string
+	BaseURL      string
 }
 
 func (c *Config) Validate() error {
@@ -68,6 +70,8 @@ func LoadConfig() *Config {
 		FrontendURLs: frontendURLs,
 		Env:          getEnv("APP_ENV", "development"),
 		GinMode:      getEnv("GIN_MODE", "debug"),
+		UploadPath:   getEnv("UPLOAD_PATH", "./uploads"),
+		BaseURL:      getEnv("BASE_URL", "http://localhost:8080"),
 	}
 }
 

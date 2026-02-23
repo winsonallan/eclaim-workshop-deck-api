@@ -3,6 +3,7 @@ package orders
 import (
 	"eclaim-workshop-deck-api/internal/models"
 	"errors"
+	"fmt"
 )
 
 type Service struct {
@@ -23,6 +24,10 @@ func (s *Service) GetOrders() ([]models.Order, error) {
 
 func (s *Service) GetIncomingOrders(workshopId uint) ([]models.Order, error) {
 	return s.repo.GetIncomingOrders(workshopId)
+}
+
+func (s *Service) GetNegotiatingOrders(workshopId uint) ([]models.Order, error) {
+	return s.repo.GetNegotiatingOrders(workshopId)
 }
 
 func (s *Service) ViewOrderDetails(orderNo uint) (models.Order, error) {
@@ -220,6 +225,9 @@ func (s *Service) AcceptOrder(id uint, req AcceptDeclineOrder) (*models.Order, e
 	workOrder := order.WorkOrders[0]
 	groupNo := workOrder.AdditionalWorkOrderCount
 
+	fmt.Println("Order LastModifiedBy:", req.LastModifiedBy)
+	fmt.Println("WorkOrder LastModifiedBy:", workOrder.LastModifiedBy)
+
 	var orderPanels []models.OrderPanel
 
 	for _, op := range workOrder.OrderPanels {
@@ -285,6 +293,15 @@ func (s *Service) AcceptOrder(id uint, req AcceptDeclineOrder) (*models.Order, e
 	order.Status = "repairing"
 	order.LastModifiedBy = &req.LastModifiedBy
 
+	if !(req.ETA.IsZero()) {
+		order.Eta = req.ETA
+	}
+
+	if req.DiscountType != "" {
+		order.DiscountType = req.DiscountType
+		order.Discount = req.Discount
+	}
+
 	if err := s.repo.UpdateOrder(&order); err != nil {
 		return nil, err
 	}
@@ -300,6 +317,8 @@ func (s *Service) DeclineOrder(id uint, req AcceptDeclineOrder) (*models.Order, 
 
 	workOrder := order.WorkOrders[0]
 	groupNo := workOrder.AdditionalWorkOrderCount
+	fmt.Println("Order LastModifiedBy:", req.LastModifiedBy)
+	fmt.Println("WorkOrder LastModifiedBy:", workOrder.LastModifiedBy)
 
 	workOrder.IsLocked = true
 	workOrder.LastModifiedBy = &req.LastModifiedBy

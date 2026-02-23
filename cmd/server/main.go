@@ -22,6 +22,7 @@ import (
 	"eclaim-workshop-deck-api/internal/domain/suppliers"
 	"eclaim-workshop-deck-api/internal/domain/usermanagement"
 	"eclaim-workshop-deck-api/internal/middleware"
+	"eclaim-workshop-deck-api/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -43,7 +44,12 @@ func main() {
 
 	db := config.ConnectDB(cfg)
 
-	domains := bootstrap.InitDomains(db, cfg, logger)
+	localStorage, err := utils.NewLocalStorage(cfg.UploadPath, cfg.BaseURL)
+	if err != nil {
+		logger.Fatal("failed to initialize local storage", zap.Error(err))
+	}
+
+	domains := bootstrap.InitDomains(db, cfg, logger, localStorage)
 
 	r := gin.New()
 
@@ -58,6 +64,8 @@ func main() {
 	r.Use(middleware.CORSMiddleware(cfg.FrontendURLs))
 	r.Use(rateLimiter)
 	r.Use(middleware.SecurityHeaders(cfg.Env))
+
+	r.Static("/uploads", cfg.UploadPath)
 
 	// Health check — outside /api so it doesn't require an API key
 	r.GET("/health", func(c *gin.Context) {

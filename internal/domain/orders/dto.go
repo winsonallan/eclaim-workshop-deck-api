@@ -58,5 +58,15 @@ type ProposeAdditionalWorkRequest struct {
 }
 
 type AcceptDeclineOrder struct {
-	LastModifiedBy uint `json:"last_modified_by"`
+	ETA            time.Time `json:"eta"`
+	DiscountType   string    `json:"discount_type"`
+	Discount       float64   `json:"discount"`
+	LastModifiedBy uint      `json:"last_modified_by" binding:"required"`
+}
+
+type NegotiateOrder struct {
+	WorkOrderNo    uint                `json:"work_order_no"`
+	OrderPanels    []OrderPanelRequest `json:"order_panels"`
+	Reason         string              `json:"reason"`
+	LastModifiedBy uint                `json:"last_modified_by" binding:"required"`
 }

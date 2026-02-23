@@ -7,11 +7,12 @@ type Order struct {
 	WorkshopNo     uint      `gorm:"type:int(11);not null" json:"workshop_no"`
 	InsuranceNo    *uint     `gorm:"type:int(11);null" json:"insurance_no"`
 	InvoiceNo      *uint     `gorm:"type:int(11);null" json:"invoice_no"`
-	Status         string    `gorm:"type:enum('draft','incoming','negotiating','repairing','declined','additional_work','repaired','delivered','completed');not null" json:"status"`
+	Status         string    `gorm:"type:enum('draft','incoming','negotiating','repairing','declined','proposed_additional','additional_work','repaired','delivered','completed');not null" json:"status"`
 	OrderType      string    `gorm:"type:enum('insurance','manual');not null" json:"order_type"`
 	ClientNo       uint      `gorm:"type:int(11);not null" json:"client_no"`
 	ClaimDetails   string    `gorm:"not null" json:"claim_details"`
 	Eta            time.Time `gorm:"column:ETA;type:date;null" json:"eta"`
+	DiscountType   string    `gorm:"type:enum('fixed','percent');null" json:"discount_type"`
 	Discount       float64   `gorm:"type:float;default:0;not null" json:"discount"`
 	CompletedAt    time.Time `gorm:"column:completed_at;type:datetime;not null" json:"completed_at"`
 	IsLocked       bool      `gorm:"type:tinyint(1);default:0;not null" json:"is_locked"`
