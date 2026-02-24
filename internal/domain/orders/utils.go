@@ -82,19 +82,20 @@ func (s *Service) prepareOrderPanels(req OrderPanelRequest, createdBy, workOrder
 					}
 				}
 
-				orderPanel.WorkshopPrice = chosenMeasurement.LaborFee
+				orderPanel.WorkshopPrice = &chosenMeasurement.LaborFee
 			} else {
-				orderPanel.WorkshopPrice = workshopPanel.LaborFee
+				orderPanel.WorkshopPrice = &workshopPanel.LaborFee
 			}
 		case "replacement":
-			orderPanel.WorkshopPrice = workshopPanel.LaborFee + workshopPanel.SparePartCost
+			total := workshopPanel.LaborFee + workshopPanel.SparePartCost
+			orderPanel.WorkshopPrice = &total
 		default:
 			return nil, errors.New("service type error while preparing order panels (insurance panel)")
 		}
 	}
 
 	if req.WorkshopQty != 0 {
-		orderPanel.WorkshopQty = req.WorkshopQty
+		orderPanel.WorkshopQty = &req.WorkshopQty
 	}
 
 	if req.IsIncluded == true {

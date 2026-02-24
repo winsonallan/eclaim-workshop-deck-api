@@ -29,15 +29,22 @@ type CreateOrderRequest struct {
 }
 
 type OrderPanelRequest struct {
-	WOGroupNumber           uint `json:"wo_group_number"`
-	InsurancePanelPricingNo uint `json:"insurance_panel_pricing_no"`
-	InsurerMeasurementNo    uint `json:"insurer_measurement_no"`
-	InsurerQty              uint `json:"insurer_qty"`
-	WorkshopPanelPricingNo  uint `json:"workshop_panel_pricing_no"`
-	WorkshopMeasurementNo   uint `json:"workshop_measurement_no"`
-	WorkshopQty             uint `json:"workshop_qty"`
-	IsIncluded              bool `json:"is_included"`
-	IsSpecialRepair         bool `json:"is_special_repair"`
+	OrderPanelNo            uint   `json:"order_panel_no" binding:"required"`
+	WOGroupNumber           uint   `json:"wo_group_number"`
+	InsurancePanelPricingNo uint   `json:"insurance_panel_pricing_no"`
+	InsurancePanelName      string `json:"insurance_panel_name"`
+	InsurerMeasurementNo    uint   `json:"insurer_measurement_no"`
+	InsurerPrice            uint   `json:"insurer_price"`
+	InsurerQty              uint   `json:"insurer_qty"`
+	InsurerServiceType      string `json:"insurer_service_type"`
+	WorkshopPanelPricingNo  uint   `json:"workshop_panel_pricing_no"`
+	WorkshopPanelName       string `json:"workshop_panel_name"`
+	WorkshopPrice           uint   `json:"workshop_price"`
+	WorkshopMeasurementNo   uint   `json:"workshop_measurement_no"`
+	WorkshopQty             uint   `json:"workshop_qty"`
+	WorkshopServiceType     string `json:"workshop_service_type"`
+	IsIncluded              bool   `json:"is_included"`
+	IsSpecialRepair         bool   `json:"is_special_repair"`
 }
 
 type CreateWorkOrderRequest struct {
@@ -64,9 +71,23 @@ type AcceptDeclineOrder struct {
 	LastModifiedBy uint      `json:"last_modified_by" binding:"required"`
 }
 
-type NegotiateOrder struct {
-	WorkOrderNo    uint                `json:"work_order_no"`
-	OrderPanels    []OrderPanelRequest `json:"order_panels"`
-	Reason         string              `json:"reason"`
-	LastModifiedBy uint                `json:"last_modified_by" binding:"required"`
+type NegotiationPhotoMetadata struct {
+	OrderPanelNo uint   `json:"order_panel_no" binding:"required"`
+	FileIndex    int    `json:"file_index" binding:"required"`
+	PhotoCaption string `json:"photo_caption"`
+}
+
+type SubmitNegotiationRequest struct {
+	WorkOrderNo    uint                       `json:"work_order_no" binding:"required"`
+	OrderPanels    []OrderPanelRequest        `json:"order_panels" binding:"required,dive"`
+	Reason         string                     `json:"reason" binding:"required"`
+	Photos         []NegotiationPhotoMetadata `json:"photos"`
+	LastModifiedBy uint                       `json:"last_modified_by" binding:"required"`
+}
+
+type NegotiationCreatedInfo struct {
+	OrderPanelNo         uint `json:"order_panel_no"`
+	NegotiationHistoryNo uint `json:"negotiation_history_no"`
+	RoundCount           uint `json:"round_count"`
+	PhotosUploaded       int  `json:"photos_uploaded"`
 }

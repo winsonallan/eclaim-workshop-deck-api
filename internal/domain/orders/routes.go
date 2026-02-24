@@ -18,7 +18,7 @@ func RegisterRoutes(router *gin.RouterGroup, handler *Handler, authMiddleware gi
 			incomingOrders := orders.Group("/incoming")
 			{
 				incomingOrders.GET("", handler.GetIncomingOrders)
-				// incomingOrders.POST("/negotiate", handler.SubmitNegotiation)
+				incomingOrders.POST("/negotiate", handler.SubmitNegotiation)
 				incomingOrders.PUT("/accept/:id", handler.AcceptOrder)
 				incomingOrders.PUT("/decline/:id", handler.DeclineOrder)
 			}

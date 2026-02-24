@@ -15,16 +15,16 @@ type OrderPanel struct {
 	InsurerQty              uint      `gorm:"type:int(11);null" json:"insurer_qty"`
 	WorkshopPanelPricingNo  *uint     `gorm:"type:int(11);null" json:"workshop_panel_pricing_no"`
 	WorkshopPanelName       string    `gorm:"type:varchar(255);null" json:"workshop_panel_name"`
-	WorkshopPrice           uint      `gorm:"type:int(11);null" json:"workshop_price"`
+	WorkshopPrice           *uint     `gorm:"type:int(11);null" json:"workshop_price"`
 	WorkshopMeasurementNo   *uint     `gorm:"type:int(11);null" json:"workshop_measurement_no"`
 	WorkshopServiceType     string    `gorm:"type:enum('repair','replacement');null" json:"workshop_service_type"`
-	WorkshopQty             uint      `gorm:"type:int(11);null" json:"workshop_qty"`
+	WorkshopQty             *uint     `gorm:"type:int(11);null" json:"workshop_qty"`
 	FinalPanelPricingNo     *uint     `gorm:"type:int(11);null" json:"final_panel_pricing_no"`
 	FinalPanelName          string    `gorm:"type:varchar(255);null" json:"final_panel_name"`
-	FinalPrice              uint      `gorm:"type:int(11);null" json:"final_price"`
+	FinalPrice              *uint     `gorm:"type:int(11);null" json:"final_price"`
 	FinalMeasurementNo      *uint     `gorm:"type:int(11);null" json:"final_measurement_no"`
 	FinalServiceType        string    `gorm:"type:enum('repair','replacement')" json:"final_service_type"`
-	FinalQty                uint      `gorm:"type:int(11);null" json:"final_qty"`
+	FinalQty                *uint     `gorm:"type:int(11);null" json:"final_qty"`
 	IsIncluded              bool      `gorm:"type:tinyint(1);default:1;not null" json:"is_included"`
 	IsSpecialRepair         bool      `gorm:"type:tinyint(1);default:0;not null" json:"is_special_repair"`
 	NegotiationStatus       string    `gorm:"type:enum('pending_workshop','negotiating','proposed_additional','additional_work','accepted','rejected');default:pending_workshop;not null" json:"negotiation_status"`

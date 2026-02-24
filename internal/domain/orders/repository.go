@@ -2,8 +2,11 @@ package orders
 
 import (
 	"eclaim-workshop-deck-api/internal/models"
+	"errors"
+	"fmt"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Repository struct {
@@ -12,6 +15,27 @@ type Repository struct {
 
 func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db: db}
+}
+
+func (r *Repository) WithTransaction(fn func(tx *gorm.DB) error) error {
+	tx := r.db.Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			panic(r) // re-throw panic after rollback
+		}
+	}()
+
+	if err := fn(tx); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit().Error
 }
 
 func (r *Repository) GetOrders() ([]models.Order, error) {
@@ -54,6 +78,39 @@ func (r *Repository) GetNegotiatingOrders(id uint) ([]models.Order, error) {
 		Find(&orders).Error
 
 	return orders, err
+}
+
+func (r *Repository) GetOrderPanelWithLock(tx *gorm.DB, orderPanelNo uint) (*models.OrderPanel, error) {
+	var orderPanel models.OrderPanel
+
+	err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+		First(&orderPanel, orderPanelNo).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("order panel not found")
+		}
+		return nil, err
+	}
+
+	return &orderPanel, nil
+}
+
+func (r *Repository) GetLatestNegotiationHistory(db *gorm.DB, orderPanelNo uint) (*models.NegotiationHistory, error) {
+	var history models.NegotiationHistory
+
+	err := db.Where("order_panel_no = ?", orderPanelNo).
+		Order("round_count DESC").
+		First(&history).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil // No negotiation history yet
+		}
+		return nil, err
+	}
+
+	return &history, nil
 }
 
 func (r *Repository) ViewOrderDetails(id uint) (models.Order, error) {
@@ -122,6 +179,32 @@ func (r *Repository) FindWorkOrderById(id uint) (*models.WorkOrder, error) {
 	return &workOrder, err
 }
 
+func (r *Repository) GetWorkOrder(db *gorm.DB, workOrderNo uint) (*models.WorkOrder, error) {
+	var workOrder models.WorkOrder
+
+	err := db.First(&workOrder, workOrderNo).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("work order not found")
+		}
+		return nil, err
+	}
+
+	return &workOrder, nil
+}
+
+// Create
+func (r *Repository) CreateNegotiationHistory(tx *gorm.DB, history *models.NegotiationHistory) error {
+	return tx.Create(history).Error
+}
+
+func (r *Repository) CreateNegotiationPhotos(tx *gorm.DB, photos []models.NegotiationPhotos) error {
+	if len(photos) == 0 {
+		return nil
+	}
+	return tx.Create(&photos).Error
+}
+
 func (r *Repository) CreateOrder(order *models.Order) error {
 	return r.db.Create(order).Error
 }
@@ -153,6 +236,56 @@ func (r *Repository) UpdateOrderPanel(orderPanel *models.OrderPanel) error {
 	return r.db.Save(orderPanel).Error
 }
 
+func (r *Repository) UpdateOrderPanelTx(tx *gorm.DB, orderPanel *models.OrderPanel) error {
+	return tx.Save(orderPanel).Error
+}
+
 func (r *Repository) UpdateOrder(order *models.Order) error {
 	return r.db.Save(order).Error
+}
+
+func (r *Repository) UpdateOrderTx(tx *gorm.DB, order *models.Order) error {
+	return tx.Save(order).Error
+}
+
+func (r *Repository) UpdateOrderPanelNegotiation(tx *gorm.DB, orderPanelNo uint, updates map[string]interface{}) error {
+	result := tx.Model(&models.OrderPanel{}).
+		Where("order_panel_no = ?", orderPanelNo).
+		Updates(updates)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return errors.New("order panel not found or no changes made")
+	}
+
+	return nil
+}
+
+func (r *Repository) BulkAcceptPanelsByGroupRangeTx(
+	tx *gorm.DB,
+	workOrderNo uint,
+	startGroup, endGroup uint,
+	lastModifiedBy uint,
+) error {
+	result := tx.
+		Model(&models.OrderPanel{}).
+		Where("work_order_no = ? AND work_order_group_number >= ? AND work_order_group_number < ? AND negotiation_status = ?",
+			workOrderNo, startGroup, endGroup, "pending_workshop").
+		Updates(map[string]interface{}{
+			"negotiation_status": "accepted",
+			"last_modified_by":   lastModifiedBy,
+		})
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("no panels found to accept for work order %d", workOrderNo)
+	}
+
+	return nil
 }

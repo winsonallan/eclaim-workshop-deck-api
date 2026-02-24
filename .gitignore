@@ -10,3 +10,6 @@
 
 # Logs
 /logs/*
+
+# Uploads folder
+/uploads/*

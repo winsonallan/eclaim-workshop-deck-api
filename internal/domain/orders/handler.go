@@ -3,6 +3,8 @@ package orders
 import (
 	"eclaim-workshop-deck-api/internal/common/response"
 	"eclaim-workshop-deck-api/pkg/utils"
+	"encoding/json"
+	"mime/multipart"
 	"net/http"
 	"strconv"
 
@@ -17,7 +19,7 @@ type Handler struct {
 }
 
 func NewHandler(service *Service, log *zap.Logger, storage *utils.LocalStorage) *Handler {
-	return &Handler{service: service, log: log}
+	return &Handler{service: service, log: log, storage: storage}
 }
 
 // Read
@@ -169,6 +171,51 @@ func (h *Handler) CreateWorkOrder(c *gin.Context) {
 	}
 
 	response.Success(c, http.StatusCreated, "work order created successfully", gin.H{"work_order": workOrder})
+}
+
+func (h *Handler) SubmitNegotiation(c *gin.Context) {
+	err := c.Request.ParseMultipartForm(32 << 20)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Failed to parse multipart form")
+		return
+	}
+
+	dataStr := c.PostForm("data")
+	if dataStr == "" {
+		response.Error(c, http.StatusBadRequest, "Missing 'data' field in form")
+		return
+	}
+
+	var req SubmitNegotiationRequest
+	if err := json.Unmarshal([]byte(dataStr), &req); err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid JSON in 'data' field")
+		return
+	}
+
+	form, err := c.MultipartForm()
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Failed to get multipart form")
+		return
+	}
+
+	files := form.File["files"]
+
+	uploadFn := func(file multipart.File, header *multipart.FileHeader, folder string) (string, error) {
+		return h.storage.Upload(file, header, folder)
+	}
+
+	result, err := h.service.SubmitNegotiation(&req, files, uploadFn)
+	if err != nil {
+		h.log.Error("Failed to submit negotiation", zap.Error(err))
+
+		// You can return a mapped error message here
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusCreated, "Negotiation successfully submitted", gin.H{
+		"work_order": result,
+	})
 }
 
 // Update
