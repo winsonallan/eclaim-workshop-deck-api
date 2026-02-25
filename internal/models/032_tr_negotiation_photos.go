@@ -5,6 +5,7 @@ import "time"
 type NegotiationPhotos struct {
 	NegotiationPhotoNo   uint      `gorm:"primaryKey;not null;autoIncrement;type:int(11)" json:"negotiation_photo_no"`
 	NegotiationHistoryNo uint      `gorm:"not null;type:int(11)" json:"repair_history_no"`
+	PhotoCaption         string    `gorm:"type:varchar(255);not null" json:"photo_caption"`
 	PhotoUrl             string    `gorm:"type:varchar(255);not null" json:"photo_url"`
 	CreatedAt            time.Time `gorm:"column:created_date;type:datetime;default:CURRENT_TIMESTAMP" json:"created_date"`
 	CreatedBy            *uint     `gorm:"column:created_by;type:int(11);null" json:"created_by"`

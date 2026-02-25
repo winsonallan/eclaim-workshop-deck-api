@@ -289,3 +289,25 @@ func (r *Repository) BulkAcceptPanelsByGroupRangeTx(
 
 	return nil
 }
+
+func (r *Repository) CreateOrderPanelsBatchTx(tx *gorm.DB, orderPanels []*models.OrderPanel) error {
+	if len(orderPanels) == 0 {
+		return nil
+	}
+	return tx.Create(&orderPanels).Error
+}
+
+func (r *Repository) UpdateWorkOrderTx(tx *gorm.DB, workOrder *models.WorkOrder) error {
+	return tx.Save(workOrder).Error
+}
+
+func (r *Repository) CreateRepairHistoryTx(tx *gorm.DB, history *models.RepairHistory) error {
+	return tx.Create(history).Error
+}
+
+func (r *Repository) CreateRepairPhotosTx(tx *gorm.DB, photos []models.RepairPhoto) error {
+	if len(photos) == 0 {
+		return nil
+	}
+	return tx.Create(&photos).Error
+}

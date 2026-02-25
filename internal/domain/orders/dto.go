@@ -58,10 +58,10 @@ type CreateWorkOrderRequest struct {
 }
 
 type ProposeAdditionalWorkRequest struct {
-	WorkOrderNo uint                `json:"work_order_no" binding:"required"`
-	OrderPanels []OrderPanelRequest `json:"order_panels"`
-
-	LastModifiedBy uint `json:"last_modified_by"`
+	WorkOrderNo    uint                          `json:"work_order_no" binding:"required"`
+	OrderPanels    []OrderPanelRequest           `json:"order_panels"`
+	Photos         []AdditionalWorkPhotoMetadata `json:"photos"`
+	LastModifiedBy uint                          `json:"last_modified_by"`
 }
 
 type AcceptDeclineOrder struct {
@@ -72,9 +72,14 @@ type AcceptDeclineOrder struct {
 }
 
 type NegotiationPhotoMetadata struct {
-	OrderPanelNo uint   `json:"order_panel_no" binding:"required"`
-	FileIndex    int    `json:"file_index" binding:"required"`
-	PhotoCaption string `json:"photo_caption"`
+	OrderPanelNo uint `json:"order_panel_no" binding:"required"`
+	FileIndex    int  `json:"file_index" binding:"required"`
+}
+
+type AdditionalWorkPhotoMetadata struct {
+	WorkshopPanelPricingNo uint   `json:"workshop_panel_pricing_no"`
+	FileIndex              int    `json:"file_index" binding:"required"`
+	PhotoCaption           string `json:"photo_caption"`
 }
 
 type SubmitNegotiationRequest struct {

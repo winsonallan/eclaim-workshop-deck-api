@@ -5,7 +5,8 @@ import (
 	"mime/multipart"
 	"os"
 	"path/filepath"
-	"time"
+
+	"github.com/google/uuid"
 )
 
 type LocalStorage struct {
@@ -21,23 +22,19 @@ func NewLocalStorage(basePath, baseURL string) (*LocalStorage, error) {
 }
 
 func (s *LocalStorage) Upload(file multipart.File, header *multipart.FileHeader, folder string) (string, error) {
-	// Create subfolder if it doesn't exist (e.g. uploads/documents, etc)
 	dir := filepath.Join(s.basePath, folder)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return "", fmt.Errorf("failed to create folder: %w", err)
 	}
 
-	// Generate unique filename — never trust the original name
 	ext := filepath.Ext(header.Filename)
-	filename := fmt.Sprintf("%d%s", time.Now().UnixNano(), ext)
+	filename := fmt.Sprintf("%s%s", uuid.New().String(), ext)
 	fullPath := filepath.Join(dir, filename)
 
-	// Save file to disk
 	if err := saveFile(file, fullPath); err != nil {
 		return "", fmt.Errorf("failed to save file: %w", err)
 	}
 
-	// Return a URL path the client can use to access the file
 	return fmt.Sprintf("%s/%s/%s", s.baseURL, folder, filename), nil
 }
 

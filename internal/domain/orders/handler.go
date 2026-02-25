@@ -140,20 +140,42 @@ func (h *Handler) CreateOrder(c *gin.Context) {
 }
 
 func (h *Handler) ProposeAdditionalWork(c *gin.Context) {
-	var req ProposeAdditionalWorkRequest
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error())
+	err := c.Request.ParseMultipartForm(32 << 20)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Failed to parse multipart form")
 		return
 	}
 
-	workOrder, err := h.service.ProposeAdditionalWork(req)
+	dataStr := c.PostForm("data")
+	if dataStr == "" {
+		response.Error(c, http.StatusBadRequest, "Missing 'data' field in form")
+		return
+	}
+
+	var req ProposeAdditionalWorkRequest
+	if err := json.Unmarshal([]byte(dataStr), &req); err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid JSON in 'data' field")
+		return
+	}
+
+	form, err := c.MultipartForm()
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Failed to get multipart form")
+		return
+	}
+	files := form.File["files"]
+
+	uploadFn := func(file multipart.File, header *multipart.FileHeader, folder string) (string, error) {
+		return h.storage.Upload(file, header, folder)
+	}
+
+	result, err := h.service.ProposeAdditionalWork(&req, files, uploadFn)
 	if err != nil {
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	response.Success(c, http.StatusCreated, "additional work proposed successfully", gin.H{"work_order": workOrder})
+	response.Success(c, http.StatusCreated, "additional work proposed successfully", gin.H{"work_order": result})
 }
 
 func (h *Handler) CreateWorkOrder(c *gin.Context) {

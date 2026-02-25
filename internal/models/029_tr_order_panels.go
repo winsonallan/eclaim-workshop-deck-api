@@ -6,6 +6,7 @@ type OrderPanel struct {
 	OrderPanelNo            uint      `gorm:"primaryKey;type:int(11);not null;autoIncrement" json:"order_panel_no"`
 	WorkOrderNo             uint      `gorm:"type:int(11);not null" json:"work_order_no"`
 	WorkOrderGroupNumber    uint      `gorm:"type:tinyint(3);not null;default:0" json:"work_order_group_no"`
+	InitialProposer         string    `gorm:"type:enum('insurer','workshop');not null;default:'insurer'" json:"initial_proposer"`
 	CurrentRound            uint      `gorm:"type:tinyint(3);null" json:"current_round"`
 	InsurancePanelPricingNo *uint     `gorm:"type:int(11);null" json:"insurance_panel_pricing_no"`
 	InsurancePanelName      string    `gorm:"type:varchar(255);null" json:"insurance_panel_name"`
