@@ -14,6 +14,7 @@ type Order struct {
 	Eta            time.Time `gorm:"column:ETA;type:date;null" json:"eta"`
 	DiscountType   string    `gorm:"type:enum('fixed','percent');null" json:"discount_type"`
 	Discount       float64   `gorm:"type:float;default:0;not null" json:"discount"`
+	IsStarted      bool      `gorm:"type:tinyint(1);default:0;not null" json:"is_started"`
 	CompletedAt    time.Time `gorm:"column:completed_at;type:datetime;not null" json:"completed_at"`
 	IsLocked       bool      `gorm:"type:tinyint(1);default:0;not null" json:"is_locked"`
 	CreatedAt      time.Time `gorm:"column:created_date;type:datetime;default:CURRENT_TIMESTAMP" json:"created_date"`

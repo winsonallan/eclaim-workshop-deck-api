@@ -52,76 +52,6 @@ func (r *Repository) GetOrders() ([]models.Order, error) {
 	return orders, err
 }
 
-func (r *Repository) GetIncomingOrders(id uint) ([]models.Order, error) {
-	var orders []models.Order
-
-	err := r.db.
-		Preload("Workshop").
-		Preload("Insurance").
-		Preload("Client").
-		Where("tr_orders.is_locked = ? AND tr_orders.workshop_no = ? AND tr_orders.status = ?", 0, id, "incoming").
-		Order("tr_orders.order_no").
-		Find(&orders).Error
-
-	return orders, err
-}
-
-func (r *Repository) GetNegotiatingOrders(id uint) ([]models.Order, error) {
-	var orders []models.Order
-
-	err := r.db.
-		Preload("Workshop").
-		Preload("Insurance").
-		Preload("Client").
-		Where("tr_orders.is_locked = ? AND tr_orders.workshop_no = ? AND tr_orders.status = ? OR tr_orders.status = ?", 0, id, "negotiating", "additional_work").
-		Order("tr_orders.order_no").
-		Find(&orders).Error
-
-	return orders, err
-}
-
-func (r *Repository) GetRepairingOrders(id uint) ([]models.Order, error) {
-	var orders []models.Order
-
-	err := r.db.
-		Preload("Workshop").
-		Preload("Insurance").
-		Preload("Client").
-		Where("tr_orders.is_locked = ? AND tr_orders.workshop_no = ? AND tr_orders.status = ?", 0, id, "repairing").
-		Order("tr_orders.order_no").
-		Find(&orders).Error
-
-	return orders, err
-}
-
-func (r *Repository) GetRepairedOrders(id uint) ([]models.Order, error) {
-	var orders []models.Order
-
-	err := r.db.
-		Preload("Workshop").
-		Preload("Insurance").
-		Preload("Client").
-		Where("tr_orders.is_locked = ? AND tr_orders.workshop_no = ? AND tr_orders.status = ?", 0, id, "repaired").
-		Order("tr_orders.order_no").
-		Find(&orders).Error
-
-	return orders, err
-}
-
-func (r *Repository) GetDeliveredOrders(id uint) ([]models.Order, error) {
-	var orders []models.Order
-
-	err := r.db.
-		Preload("Workshop").
-		Preload("Insurance").
-		Preload("Client").
-		Where("tr_orders.is_locked = ? AND tr_orders.workshop_no = ? AND tr_orders.status = ?", 0, id, "delivered").
-		Order("tr_orders.order_no").
-		Find(&orders).Error
-
-	return orders, err
-}
-
 func (r *Repository) GetOrderPanelWithLock(tx *gorm.DB, orderPanelNo uint) (*models.OrderPanel, error) {
 	var orderPanel models.OrderPanel
 
@@ -341,15 +271,4 @@ func (r *Repository) CreateOrderPanelsBatchTx(tx *gorm.DB, orderPanels []*models
 
 func (r *Repository) UpdateWorkOrderTx(tx *gorm.DB, workOrder *models.WorkOrder) error {
 	return tx.Save(workOrder).Error
-}
-
-func (r *Repository) CreateRepairHistoryTx(tx *gorm.DB, history *models.RepairHistory) error {
-	return tx.Create(history).Error
-}
-
-func (r *Repository) CreateRepairPhotosTx(tx *gorm.DB, photos []models.RepairPhoto) error {
-	if len(photos) == 0 {
-		return nil
-	}
-	return tx.Create(&photos).Error
 }
