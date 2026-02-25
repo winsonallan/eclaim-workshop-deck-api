@@ -34,6 +34,18 @@ func (s *Service) GetNegotiatingOrders(workshopId uint) ([]models.Order, error) 
 	return s.repo.GetNegotiatingOrders(workshopId)
 }
 
+func (s *Service) GetRepairingOrders(workshopId uint) ([]models.Order, error) {
+	return s.repo.GetRepairingOrders(workshopId)
+}
+
+func (s *Service) GetRepairedOrders(workshopId uint) ([]models.Order, error) {
+	return s.repo.GetRepairedOrders(workshopId)
+}
+
+func (s *Service) GetDeliveredOrders(workshopId uint) ([]models.Order, error) {
+	return s.repo.GetDeliveredOrders(workshopId)
+}
+
 func (s *Service) ViewOrderDetails(orderNo uint) (models.Order, error) {
 	return s.repo.ViewOrderDetails(orderNo)
 }

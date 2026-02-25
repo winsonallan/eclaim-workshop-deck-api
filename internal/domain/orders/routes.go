@@ -29,49 +29,49 @@ func RegisterRoutes(router *gin.RouterGroup, handler *Handler, authMiddleware gi
 				// 	negotiatingOrders.POST("/cancel", handler.CancelNegotiation)
 			}
 
-			// repairingOrders := orders.Group("/repairing")
-			// {
-			// 	repairingOrders.GET("", handler.GetRepairingOrders)
-			// 	repairingOrders.POST("/complete", handler.CompleteRepairs)
-			// 	repairingOrders.POST("/extend-deadline", handler.ExtendDeadline)
+			repairingOrders := orders.Group("/repairing")
+			{
+				repairingOrders.GET("", handler.GetRepairingOrders)
+				// 	repairingOrders.POST("/complete", handler.CompleteRepairs)
+				// 	repairingOrders.POST("/extend-deadline", handler.ExtendDeadline)
 
-			// 	spareParts := repairingOrders.Group("/spare-parts")
-			// 	{
-			// 		spareParts.POST("/request", handler.RequestSpareParts)
-			// 		spareParts.POST("/order", handler.OrderSpareParts)
+				// 	spareParts := repairingOrders.Group("/spare-parts")
+				// 	{
+				// 		spareParts.POST("/request", handler.RequestSpareParts)
+				// 		spareParts.POST("/order", handler.OrderSpareParts)
 
-			// 		sparePartsTracking := spareParts.Group("/tracking")
-			// 		{
-			// 			sparePartsTracking.GET("", handler.GetSparePartsTracking)
-			// 			suppliers := sparePartsTracking.Group("/suppliers")
-			// 			{
-			// 				cancel := suppliers.Group("/cancel")
-			// 				{
-			// 					cancel.POST("/:id", handler.CancelSupplier)
-			// 					cancel.POST("/overdue/:id", handler.CancelSupplierOverdue)
-			// 					cancel.POST("/no-response/:id", handler.CancelSupplierOverdue)
-			// 					cancel.POST("/remaining/:id", handler.CancelRemainingSuppliers)
-			// 				}
+				// 		sparePartsTracking := spareParts.Group("/tracking")
+				// 		{
+				// 			sparePartsTracking.GET("", handler.GetSparePartsTracking)
+				// 			suppliers := sparePartsTracking.Group("/suppliers")
+				// 			{
+				// 				cancel := suppliers.Group("/cancel")
+				// 				{
+				// 					cancel.POST("/:id", handler.CancelSupplier)
+				// 					cancel.POST("/overdue/:id", handler.CancelSupplierOverdue)
+				// 					cancel.POST("/no-response/:id", handler.CancelSupplierOverdue)
+				// 					cancel.POST("/remaining/:id", handler.CancelRemainingSuppliers)
+				// 				}
 
-			// 				suppliers.POST("/accept/:id", handler.AcceptSupplierOffer)
-			// 				suppliers.POST("/negotiate/:id", handler.NegotiateOffer)
-			// 			}
-			// 		}
-			// 	}
-			// }
+				// 				suppliers.POST("/accept/:id", handler.AcceptSupplierOffer)
+				// 				suppliers.POST("/negotiate/:id", handler.NegotiateOffer)
+				// 			}
+				// 		}
+				// 	}
+			}
 
-			// repairedOrders := orders.Group("/repaired")
-			// {
-			// 	repairedOrders.GET("", handler.GetRepairedOrders)
-			// 	repairedOrders.POST("/set-unfinished", handler.SetRepairedAsUnfinished)
-			// 	repairedOrders.POST("/remind", handler.RemindPickup)
-			// 	repairedOrders.POST("/delivered", handler.SetAsDelivered)
-			// }
+			repairedOrders := orders.Group("/repaired")
+			{
+				repairedOrders.GET("", handler.GetRepairedOrders)
+				// 	repairedOrders.POST("/set-unfinished", handler.SetRepairedAsUnfinished)
+				// 	repairedOrders.POST("/remind", handler.RemindPickup)
+				// 	repairedOrders.POST("/delivered", handler.SetAsDelivered)
+			}
 
-			// deliveredOrders := orders.Group("/delivered")
-			// {
-			// 	deliveredOrders.GET("", handler.GetDeliveredOrders)
-			// }
+			deliveredOrders := orders.Group("/delivered")
+			{
+				deliveredOrders.GET("", handler.GetDeliveredOrders)
+			}
 		}
 	}
 

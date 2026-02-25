@@ -105,6 +105,78 @@ func (h *Handler) GetNegotiatingOrders(c *gin.Context) {
 	response.Success(c, http.StatusOK, "Orders Retrieved Successfully", gin.H{"orders": orders})
 }
 
+func (h *Handler) GetRepairingOrders(c *gin.Context) {
+	woIDStr := c.Query("workshop_no")
+
+	if woIDStr == "" {
+		response.Error(c, http.StatusBadRequest, "workshop no is needed")
+		return
+	}
+
+	woID, err := strconv.ParseUint(woIDStr, 10, 32)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid workshop no format")
+		return
+	}
+
+	orders, err := h.service.GetRepairingOrders(uint(woID))
+
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Orders Retrieved Successfully", gin.H{"orders": orders})
+}
+
+func (h *Handler) GetRepairedOrders(c *gin.Context) {
+	woIDStr := c.Query("workshop_no")
+
+	if woIDStr == "" {
+		response.Error(c, http.StatusBadRequest, "workshop no is needed")
+		return
+	}
+
+	woID, err := strconv.ParseUint(woIDStr, 10, 32)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid workshop no format")
+		return
+	}
+
+	orders, err := h.service.GetRepairedOrders(uint(woID))
+
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Orders Retrieved Successfully", gin.H{"orders": orders})
+}
+
+func (h *Handler) GetDeliveredOrders(c *gin.Context) {
+	woIDStr := c.Query("workshop_no")
+
+	if woIDStr == "" {
+		response.Error(c, http.StatusBadRequest, "workshop no is needed")
+		return
+	}
+
+	woID, err := strconv.ParseUint(woIDStr, 10, 32)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid workshop no format")
+		return
+	}
+
+	orders, err := h.service.GetDeliveredOrders(uint(woID))
+
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Orders Retrieved Successfully", gin.H{"orders": orders})
+}
+
 // Create
 func (h *Handler) AddClient(c *gin.Context) {
 	var req AddClientRequest
