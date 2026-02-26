@@ -26,7 +26,7 @@ func (r *Repository) WithTransaction(fn func(tx *gorm.DB) error) error {
 	defer func() {
 		if r := recover(); r != nil {
 			tx.Rollback()
-			panic(r) // re-throw panic after rollback
+			panic(r)
 		}
 	}()
 
@@ -71,7 +71,45 @@ func (r *Repository) GetOrderPanelWithLock(tx *gorm.DB, orderPanelNo uint) (*mod
 func (r *Repository) GetLatestNegotiationHistory(db *gorm.DB, orderPanelNo uint) (*models.NegotiationHistory, error) {
 	var history models.NegotiationHistory
 
-	err := db.Where("order_panel_no = ?", orderPanelNo).
+	err := db.Where("order_panel_no = ? AND is_locked = 0", orderPanelNo).
+		Order("round_count DESC").
+		First(&history).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil // No negotiation history yet
+		}
+		return nil, err
+	}
+
+	return &history, nil
+}
+
+func (r *Repository) GetSpecificNegotiationHistoryRound(db *gorm.DB, orderPanelNo, roundNo uint) (*models.NegotiationHistory, error) {
+	var history models.NegotiationHistory
+
+	err := db.Where("order_panel_no = ? AND round_count = ? AND is_locked = 0", orderPanelNo, roundNo).
+		Order("round_count DESC").
+		First(&history).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil // No negotiation history yet
+		}
+		return nil, err
+	}
+
+	return &history, nil
+}
+
+func (r *Repository) GetLatestAcceptedNegotiationHistory(db *gorm.DB, orderPanelNo uint) (*models.NegotiationHistory, error) {
+	var history models.NegotiationHistory
+
+	err := db.
+		Preload("OldPanelPricing").
+		Preload("ProposedPanelPricing").
+		Preload("ProposedPanelPricing.WorkshopPanels").
+		Where("order_panel_no = ? AND insurance_decision = ? AND is_locked = 0", orderPanelNo, "accepted").
 		Order("round_count DESC").
 		First(&history).Error
 
@@ -95,8 +133,13 @@ func (r *Repository) ViewOrderDetails(id uint) (models.Order, error) {
 		Preload("Client").
 		Preload("WorkOrders").
 		Preload("WorkOrders.OrderPanels").
+		Preload("WorkOrders.OrderPanels.InsurerPanelPricing.Measurements").
+		Preload("WorkOrders.OrderPanels.WorkshopPanelPricing.Measurements").
+		Preload("WorkOrders.OrderPanels.FinalMeasurement").
 		Preload("WorkOrders.OrderPanels.RepairHistory").
 		Preload("WorkOrders.OrderPanels.NegotiationHistory").
+		Preload("WorkOrders.OrderPanels.NegotiationHistory.OldMeasurement").
+		Preload("WorkOrders.OrderPanels.NegotiationHistory.ProposedMeasurement").
 		Preload("WorkOrders.OrderPanels.RepairHistory.RepairPhotos").
 		Preload("WorkOrders.OrderPanels.RepairHistory.OrdersAndRequests").
 		Preload("WorkOrders.OrderPanels.RepairHistory.OrdersAndRequests.SparePartQuotes").
@@ -163,6 +206,37 @@ func (r *Repository) GetWorkOrder(db *gorm.DB, workOrderNo uint) (*models.WorkOr
 	}
 
 	return &workOrder, nil
+}
+
+func (r *Repository) FindWorkOrderFromOrderNo(id uint) (*models.WorkOrder, error) {
+	var workOrder models.WorkOrder
+
+	err := r.db.
+		Preload("Order").
+		Preload("OrderPanels").
+		Preload("CreatedByUser").
+		Preload("LastModifiedByUser").
+		Where("order_no = ? AND is_locked = 0", id).
+		First(&workOrder).Error
+
+	return &workOrder, err
+}
+
+func (r *Repository) GetOrderPanelsGroupFromWorkOrderNo(id, woGroup uint) ([]models.OrderPanel, error) {
+	var orderPanels []models.OrderPanel
+
+	err := r.db.Where("work_order_no = ? AND is_locked = 0 AND work_order_group_no = ?", id, woGroup).Find(&orderPanels).Error
+
+	return orderPanels, err
+}
+
+func (r *Repository) GetOrderPanelsBeforeGroup(workOrderNo uint, beforeGroup uint) ([]models.OrderPanel, error) {
+	var orderPanels []models.OrderPanel
+
+	err := r.db.Where("work_order_no = ? AND is_locked = 0 AND work_order_group_number < ?",
+		workOrderNo, beforeGroup).Find(&orderPanels).Error
+
+	return orderPanels, err
 }
 
 // Create
@@ -234,6 +308,10 @@ func (r *Repository) UpdateOrderPanelNegotiation(tx *gorm.DB, orderPanelNo uint,
 	}
 
 	return nil
+}
+
+func (r *Repository) UpdateNegotiationHistoryTx(tx *gorm.DB, negotiationHistory *models.NegotiationHistory) error {
+	return tx.Save(negotiationHistory).Error
 }
 
 func (r *Repository) BulkAcceptPanelsByGroupRangeTx(

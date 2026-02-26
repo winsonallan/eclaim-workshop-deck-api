@@ -96,3 +96,15 @@ type NegotiationCreatedInfo struct {
 	RoundCount           uint `json:"round_count"`
 	PhotosUploaded       int  `json:"photos_uploaded"`
 }
+
+type CancelNegotiationRequest struct {
+	OrderNo        uint `json:"order_no"`
+	LastModifiedBy uint `json:"last_modified_by"`
+}
+
+type ApproveAdditionalProposalRequest struct {
+	CancelNegotiationRequest
+	ETA          time.Time `json:"eta"`
+	DiscountType string    `json:"discount_type"`
+	Discount     float64   `json:"discount"`
+}

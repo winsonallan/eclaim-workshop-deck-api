@@ -1,6 +1,10 @@
 package orders
 
-import "eclaim-workshop-deck-api/internal/models"
+import (
+	"eclaim-workshop-deck-api/internal/models"
+
+	"gorm.io/gorm"
+)
 
 func (r *Repository) GetNegotiatingOrders(id uint) ([]models.Order, error) {
 	var orders []models.Order
@@ -14,4 +18,8 @@ func (r *Repository) GetNegotiatingOrders(id uint) ([]models.Order, error) {
 		Find(&orders).Error
 
 	return orders, err
+}
+
+func (r *Repository) CancelNegotiation(tx *gorm.DB, order *models.Order) error {
+	return tx.Save(order).Error
 }

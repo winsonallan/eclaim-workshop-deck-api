@@ -28,11 +28,11 @@ func (s *Service) SubmitNegotiation(
 	if req.Reason == "" {
 		return nil, errors.New("reason is required")
 	}
-
 	if len(req.Photos) != len(files) {
 		return nil, fmt.Errorf("file count mismatch: expected %d, got %d", len(req.Photos), len(files))
 	}
 
+	// Validate files
 	allowedTypes := map[string]bool{
 		"image/jpeg": true,
 		"image/jpg":  true,
@@ -55,26 +55,19 @@ func (s *Service) SubmitNegotiation(
 	if err != nil {
 		return nil, err
 	}
-
 	if workOrder == nil {
 		return nil, errors.New("work order not found")
 	}
-
-	groupCount := workOrder.AdditionalWorkOrderCount
 
 	order, err := s.repo.FindOrderById(workOrder.OrderNo)
 	if err != nil {
 		return nil, err
 	}
-
 	if order == nil {
 		return nil, errors.New("order not found")
 	}
 
-	order.Status = "negotiating"
-	order.LastModifiedBy = &req.LastModifiedBy
-
-	// Build photo mapping: order_panel_no -> file headers
+	// Build photo mapping
 	photosByPanel := make(map[uint][]*multipart.FileHeader)
 	for _, photoMeta := range req.Photos {
 		if photoMeta.FileIndex >= 0 && photoMeta.FileIndex < len(files) {
@@ -94,25 +87,17 @@ func (s *Service) SubmitNegotiation(
 				return fmt.Errorf("failed to lock order panel %d: %w", panelReq.OrderPanelNo, err)
 			}
 
-			// Validate order panel is in correct state
+			// Validate status
 			if orderPanel.NegotiationStatus != "pending_workshop" {
 				return fmt.Errorf("order panel %d is not pending workshop action (current status: %s)",
 					panelReq.OrderPanelNo, orderPanel.NegotiationStatus)
 			}
 
-			// Calculate new round number
 			newRound := orderPanel.CurrentRound + 1
 
-			// Create negotiation history entry
 			negotiationHistory := &models.NegotiationHistory{
-				OrderPanelNo:      panelReq.OrderPanelNo,
-				RoundCount:        newRound,
-				OldPanelPricingNo: orderPanel.InsurancePanelPricingNo,
-				OldPrice:          orderPanel.InsurerPrice,
-				OldMeasurementNo:  orderPanel.InsurerMeasurementNo,
-				OldServiceType:    orderPanel.InsurerServiceType,
-				OldQty:            orderPanel.InsurerQty,
-
+				OrderPanelNo:           panelReq.OrderPanelNo,
+				RoundCount:             newRound,
 				ProposedPanelPricingNo: panelReq.WorkshopPanelPricingNo,
 				ProposedPrice:          panelReq.WorkshopPrice,
 				ProposedServiceType:    panelReq.WorkshopServiceType,
@@ -120,6 +105,40 @@ func (s *Service) SubmitNegotiation(
 				WorkshopNotes:          req.Reason,
 				InsuranceDecision:      "pending",
 				CreatedBy:              &req.LastModifiedBy,
+			}
+
+			if orderPanel.InitialProposer == "insurer" {
+				if orderPanel.InsurancePanelPricingNo != nil {
+					negotiationHistory.OldPanelPricingNo = orderPanel.InsurancePanelPricingNo
+				}
+				if orderPanel.InsurerPrice != nil {
+					negotiationHistory.OldPrice = *orderPanel.InsurerPrice
+				}
+				if orderPanel.InsurerMeasurementNo != nil {
+					negotiationHistory.OldMeasurementNo = orderPanel.InsurerMeasurementNo
+				}
+				if orderPanel.InsurerServiceType != nil {
+					negotiationHistory.OldServiceType = *orderPanel.InsurerServiceType
+				}
+				if orderPanel.InsurerQty != nil {
+					negotiationHistory.OldQty = *orderPanel.InsurerQty
+				}
+			} else {
+				if orderPanel.WorkshopPanelPricingNo != nil {
+					negotiationHistory.OldPanelPricingNo = orderPanel.WorkshopPanelPricingNo
+				}
+				if orderPanel.WorkshopPrice != nil {
+					negotiationHistory.OldPrice = *orderPanel.WorkshopPrice
+				}
+				if orderPanel.WorkshopMeasurementNo != nil {
+					negotiationHistory.OldMeasurementNo = orderPanel.WorkshopMeasurementNo
+				}
+				if orderPanel.WorkshopServiceType != nil {
+					negotiationHistory.OldServiceType = *orderPanel.WorkshopServiceType
+				}
+				if orderPanel.WorkshopQty != nil {
+					negotiationHistory.OldQty = *orderPanel.WorkshopQty
+				}
 			}
 
 			if panelReq.WorkshopMeasurementNo != 0 {
@@ -132,13 +151,13 @@ func (s *Service) SubmitNegotiation(
 					panelReq.OrderPanelNo, err)
 			}
 
-			// Update order panel with workshop proposal
+			// Update order panel
 			orderPanel.CurrentRound = newRound
 			orderPanel.NegotiationStatus = "negotiating"
 			orderPanel.WorkshopPanelPricingNo = &panelReq.WorkshopPanelPricingNo
-			orderPanel.WorkshopPanelName = panelReq.WorkshopPanelName
-			orderPanel.WorkshopPrice = &negotiationHistory.ProposedPrice
-			orderPanel.WorkshopServiceType = negotiationHistory.ProposedServiceType
+			orderPanel.WorkshopPanelName = &panelReq.WorkshopPanelName
+			orderPanel.WorkshopPrice = &panelReq.WorkshopPrice
+			orderPanel.WorkshopServiceType = &panelReq.WorkshopServiceType
 			orderPanel.WorkshopQty = &panelReq.WorkshopQty
 			orderPanel.IsIncluded = panelReq.IsIncluded
 			orderPanel.IsSpecialRepair = panelReq.IsSpecialRepair
@@ -153,7 +172,7 @@ func (s *Service) SubmitNegotiation(
 				return fmt.Errorf("failed to update order panel %d: %w", panelReq.OrderPanelNo, err)
 			}
 
-			// Upload photos and create photo records
+			// Upload photos
 			photosUploaded := 0
 			panelPhotos := photosByPanel[panelReq.OrderPanelNo]
 
@@ -161,7 +180,6 @@ func (s *Service) SubmitNegotiation(
 				photoRecords := make([]models.NegotiationPhotos, 0)
 
 				for _, fileHeader := range panelPhotos {
-					// Open file
 					file, err := fileHeader.Open()
 					if err != nil {
 						return fmt.Errorf("failed to open file %s: %w", fileHeader.Filename, err)
@@ -174,7 +192,6 @@ func (s *Service) SubmitNegotiation(
 						time.Now().Day(),
 					)
 
-					// Upload to storage
 					photoURL, err := uploadFn(file, fileHeader, folder)
 					file.Close()
 
@@ -182,7 +199,6 @@ func (s *Service) SubmitNegotiation(
 						return fmt.Errorf("failed to upload file %s: %w", fileHeader.Filename, err)
 					}
 
-					// Create photo record
 					photoRecords = append(photoRecords, models.NegotiationPhotos{
 						NegotiationHistoryNo: negotiationHistory.NegotiationHistoryNo,
 						PhotoUrl:             photoURL,
@@ -192,7 +208,6 @@ func (s *Service) SubmitNegotiation(
 					photosUploaded++
 				}
 
-				// Save all photo records
 				if len(photoRecords) > 0 {
 					err = s.repo.CreateNegotiationPhotos(tx, photoRecords)
 					if err != nil {
@@ -210,15 +225,12 @@ func (s *Service) SubmitNegotiation(
 			})
 		}
 
-		if groupCount > 0 {
-			if err := s.repo.BulkAcceptPanelsByGroupRangeTx(tx, workOrder.WorkOrderNo, 0, groupCount, req.LastModifiedBy); err != nil {
-				return fmt.Errorf("failed to bulk accept previous panels: %w", err)
-			}
-		}
-
+		// Update order status
+		order.Status = "negotiating"
+		order.LastModifiedBy = &req.LastModifiedBy
 		err = s.repo.UpdateOrderTx(tx, order)
 		if err != nil {
-			return fmt.Errorf("failed to update order status for work order %d: %w", req.WorkOrderNo, err)
+			return fmt.Errorf("failed to update order status: %w", err)
 		}
 
 		return nil
@@ -237,88 +249,71 @@ func (s *Service) AcceptOrder(id uint, req AcceptDeclineOrder) (*models.Order, e
 		return nil, errors.New("order not found")
 	}
 
+	if order.Status != "incoming" {
+		return nil, fmt.Errorf("order is not in incoming status (current: %s)", order.Status)
+	}
+
 	workOrder := order.WorkOrders[0]
 	groupNo := workOrder.AdditionalWorkOrderCount
 
-	fmt.Println("Order LastModifiedBy:", req.LastModifiedBy)
-	fmt.Println("WorkOrder LastModifiedBy:", workOrder.LastModifiedBy)
-
-	var orderPanels []models.OrderPanel
-
-	for _, op := range workOrder.OrderPanels {
-		if op.WorkOrderGroupNumber <= groupNo {
-			orderPanels = append(orderPanels, op)
-		}
-	}
-
-	for _, op := range orderPanels {
-		if *op.InsurancePanelPricingNo != 0 {
-			op.WorkshopPanelPricingNo = op.InsurancePanelPricingNo
-			op.FinalPanelPricingNo = op.InsurancePanelPricingNo
-
-			op.WorkshopPanelName = op.InsurancePanelName
-			op.FinalPanelName = op.InsurancePanelName
-
-			op.WorkshopPrice = &op.InsurerPrice
-			op.FinalPrice = &op.InsurerPrice
-
-			op.WorkshopServiceType = op.InsurerServiceType
-			op.FinalServiceType = op.InsurerServiceType
-
-			if op.InsurerMeasurementNo != nil && *op.InsurerMeasurementNo != 0 {
-				op.WorkshopMeasurementNo = op.InsurerMeasurementNo
-				op.FinalMeasurementNo = op.InsurerMeasurementNo
-			}
-
-			if op.InsurerQty != 0 {
-				op.WorkshopQty = &op.InsurerQty
-				op.FinalQty = &op.InsurerQty
-			}
-		} else if *op.WorkshopPanelPricingNo != 0 {
-			op.InsurancePanelPricingNo = op.WorkshopPanelPricingNo
-			op.FinalPanelPricingNo = op.WorkshopPanelPricingNo
-
-			op.InsurancePanelName = op.WorkshopPanelName
-			op.FinalPanelName = op.WorkshopPanelName
-
-			op.InsurerPrice = *op.WorkshopPrice
-			op.FinalPrice = op.WorkshopPrice
-
-			op.InsurerServiceType = op.WorkshopServiceType
-			op.FinalServiceType = op.WorkshopServiceType
-
-			if op.WorkshopMeasurementNo != nil && *op.WorkshopMeasurementNo != 0 {
-				op.InsurerMeasurementNo = op.WorkshopMeasurementNo
-				op.FinalMeasurementNo = op.WorkshopMeasurementNo
-			}
-
-			if *op.WorkshopQty != 0 {
-				op.InsurerQty = *op.WorkshopQty
-				op.FinalQty = op.WorkshopQty
+	err = s.repo.WithTransaction(func(tx *gorm.DB) error {
+		// Get panels in current group
+		var orderPanels []models.OrderPanel
+		for _, op := range workOrder.OrderPanels {
+			if op.WorkOrderGroupNumber <= groupNo {
+				orderPanels = append(orderPanels, op)
 			}
 		}
 
-		op.LastModifiedBy = &req.LastModifiedBy
-		op.NegotiationStatus = "accepted"
-		if err := s.repo.UpdateOrderPanel(&op); err != nil {
-			return nil, err
+		for _, op := range orderPanels {
+			lockedPanel, err := s.repo.GetOrderPanelWithLock(tx, op.OrderPanelNo)
+			if err != nil {
+				return fmt.Errorf("failed to lock panel %d: %w", op.OrderPanelNo, err)
+			}
+
+			// Workshop accepts insurer's original terms
+			// Copy insurer → final (no negotiation happened)
+			if lockedPanel.InitialProposer == "insurer" {
+				lockedPanel.FinalPanelPricingNo = lockedPanel.InsurancePanelPricingNo
+				lockedPanel.FinalPanelName = lockedPanel.InsurancePanelName
+				lockedPanel.FinalPrice = lockedPanel.InsurerPrice
+				lockedPanel.FinalServiceType = lockedPanel.InsurerServiceType
+				lockedPanel.FinalMeasurementNo = lockedPanel.InsurerMeasurementNo
+				lockedPanel.FinalQty = lockedPanel.InsurerQty
+			}
+
+			lockedPanel.NegotiationStatus = "accepted"
+			lockedPanel.LastModifiedBy = &req.LastModifiedBy
+
+			err = s.repo.UpdateOrderPanelTx(tx, lockedPanel)
+			if err != nil {
+				return fmt.Errorf("failed to update panel %d: %w", op.OrderPanelNo, err)
+			}
 		}
-	}
 
-	order.IsStarted = true
-	order.Status = "repairing"
-	order.LastModifiedBy = &req.LastModifiedBy
+		// Update order
+		order.IsStarted = true
+		order.Status = "repairing"
+		order.LastModifiedBy = &req.LastModifiedBy
 
-	if !(req.ETA.IsZero()) {
-		order.Eta = req.ETA
-	}
+		if !req.ETA.IsZero() {
+			order.Eta = req.ETA
+		}
 
-	if req.DiscountType != "" {
-		order.DiscountType = req.DiscountType
-		order.Discount = req.Discount
-	}
+		if req.DiscountType != "" {
+			order.DiscountType = req.DiscountType
+			order.Discount = req.Discount
+		}
 
-	if err := s.repo.UpdateOrder(&order); err != nil {
+		err = s.repo.UpdateOrderTx(tx, &order)
+		if err != nil {
+			return fmt.Errorf("failed to update order: %w", err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -331,40 +326,59 @@ func (s *Service) DeclineOrder(id uint, req AcceptDeclineOrder) (*models.Order, 
 		return nil, errors.New("order not found")
 	}
 
+	if order.Status != "incoming" {
+		return nil, fmt.Errorf("order is not in incoming status (current: %s)", order.Status)
+	}
+
 	workOrder := order.WorkOrders[0]
 	groupNo := workOrder.AdditionalWorkOrderCount
-	fmt.Println("Order LastModifiedBy:", req.LastModifiedBy)
-	fmt.Println("WorkOrder LastModifiedBy:", workOrder.LastModifiedBy)
 
-	workOrder.IsLocked = true
-	workOrder.LastModifiedBy = &req.LastModifiedBy
-
-	if err := s.repo.UpdateWorkOrder(&workOrder); err != nil {
-		return nil, err
-	}
-
-	var orderPanels []models.OrderPanel
-
-	for _, op := range workOrder.OrderPanels {
-		if op.WorkOrderGroupNumber <= groupNo {
-			orderPanels = append(orderPanels, op)
+	err = s.repo.WithTransaction(func(tx *gorm.DB) error {
+		// Get panels in current group
+		var orderPanels []models.OrderPanel
+		for _, op := range workOrder.OrderPanels {
+			if op.WorkOrderGroupNumber <= groupNo {
+				orderPanels = append(orderPanels, op)
+			}
 		}
-	}
 
-	for _, op := range orderPanels {
-		op.IsLocked = true
-		op.NegotiationStatus = "rejected"
-		op.LastModifiedBy = &req.LastModifiedBy
+		for _, op := range orderPanels {
+			lockedPanel, err := s.repo.GetOrderPanelWithLock(tx, op.OrderPanelNo)
+			if err != nil {
+				return fmt.Errorf("failed to lock panel %d: %w", op.OrderPanelNo, err)
+			}
 
-		if err := s.repo.UpdateOrderPanel(&op); err != nil {
-			return nil, err
+			lockedPanel.IsLocked = true
+			lockedPanel.NegotiationStatus = "rejected"
+			lockedPanel.LastModifiedBy = &req.LastModifiedBy
+
+			err = s.repo.UpdateOrderPanelTx(tx, lockedPanel)
+			if err != nil {
+				return fmt.Errorf("failed to update panel %d: %w", op.OrderPanelNo, err)
+			}
 		}
-	}
 
-	order.Status = "declined"
-	order.LastModifiedBy = &req.LastModifiedBy
-	order.IsLocked = true
-	if err := s.repo.UpdateOrder(&order); err != nil {
+		// Lock work order
+		workOrder.IsLocked = true
+		workOrder.LastModifiedBy = &req.LastModifiedBy
+		err = s.repo.UpdateWorkOrderTx(tx, &workOrder)
+		if err != nil {
+			return fmt.Errorf("failed to update work order: %w", err)
+		}
+
+		// Lock order
+		order.Status = "declined"
+		order.LastModifiedBy = &req.LastModifiedBy
+		order.IsLocked = true
+		err = s.repo.UpdateOrderTx(tx, &order)
+		if err != nil {
+			return fmt.Errorf("failed to update order: %w", err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
 		return nil, err
 	}
 

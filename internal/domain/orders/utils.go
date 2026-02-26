@@ -28,9 +28,14 @@ func (s *Service) prepareOrderPanels(req OrderPanelRequest, createdBy, workOrder
 			return nil, errors.New("insurance panel pricing no is invalid")
 		}
 
-		orderPanel.InsurancePanelName = insurancePanel.WorkshopPanels.PanelName
-		orderPanel.InsurerServiceType = insurancePanel.ServiceType
+		orderPanel.InsurancePanelName = &insurancePanel.WorkshopPanels.PanelName
+		orderPanel.InsurerServiceType = &insurancePanel.ServiceType
 
+		if insurancePanel.InsurerNo == nil || *insurancePanel.InsurerNo == 0 {
+			orderPanel.IsSpecialRepair = false
+		} else {
+			orderPanel.IsSpecialRepair = true
+		}
 		switch insurancePanel.ServiceType {
 		case "repair":
 			if req.InsurerMeasurementNo != 0 {
@@ -43,19 +48,20 @@ func (s *Service) prepareOrderPanels(req OrderPanelRequest, createdBy, workOrder
 					}
 				}
 
-				orderPanel.InsurerPrice = chosenMeasurement.LaborFee
+				orderPanel.InsurerPrice = &chosenMeasurement.LaborFee
 			} else {
-				orderPanel.InsurerPrice = insurancePanel.LaborFee
+				orderPanel.InsurerPrice = &insurancePanel.LaborFee
 			}
 		case "replacement":
-			orderPanel.InsurerPrice = insurancePanel.LaborFee + insurancePanel.SparePartCost
+			total := insurancePanel.LaborFee + insurancePanel.SparePartCost
+			orderPanel.InsurerPrice = &total
 		default:
 			return nil, errors.New("service type error while preparing order panels (insurance panel)")
 		}
 	}
 
 	if req.InsurerQty != 0 {
-		orderPanel.InsurerQty = req.InsurerQty
+		orderPanel.InsurerQty = &req.InsurerQty
 	}
 
 	if req.WorkshopPanelPricingNo != 0 {
@@ -67,8 +73,14 @@ func (s *Service) prepareOrderPanels(req OrderPanelRequest, createdBy, workOrder
 			return nil, errors.New("insurance panel pricing no is invalid")
 		}
 
-		orderPanel.WorkshopPanelName = workshopPanel.WorkshopPanels.PanelName
-		orderPanel.WorkshopServiceType = workshopPanel.ServiceType
+		orderPanel.WorkshopPanelName = &workshopPanel.WorkshopPanels.PanelName
+		orderPanel.WorkshopServiceType = &workshopPanel.ServiceType
+
+		if workshopPanel.InsurerNo == nil || *workshopPanel.InsurerNo == 0 {
+			orderPanel.IsSpecialRepair = false
+		} else {
+			orderPanel.IsSpecialRepair = true
+		}
 
 		switch workshopPanel.ServiceType {
 		case "repair":
@@ -102,12 +114,6 @@ func (s *Service) prepareOrderPanels(req OrderPanelRequest, createdBy, workOrder
 		orderPanel.IsIncluded = true
 	} else {
 		orderPanel.IsIncluded = false
-	}
-
-	if req.IsSpecialRepair == true {
-		orderPanel.IsSpecialRepair = true
-	} else {
-		orderPanel.IsSpecialRepair = false
 	}
 
 	return orderPanel, nil

@@ -161,7 +161,6 @@ func (s *Service) ProposeAdditionalWork(
 	files []*multipart.FileHeader,
 	uploadFn func(file multipart.File, header *multipart.FileHeader, folder string) (string, error),
 ) (*models.WorkOrder, error) {
-
 	if req.LastModifiedBy == 0 {
 		return nil, errors.New("last_modified_by is required")
 	}
@@ -172,9 +171,10 @@ func (s *Service) ProposeAdditionalWork(
 		return nil, errors.New("order_panels cannot be empty")
 	}
 	if len(req.Photos) != len(files) {
-		return nil, fmt.Errorf("file count mismatch: expected %d files based on photos metadata, got %d", len(req.Photos), len(files))
+		return nil, fmt.Errorf("file count mismatch: expected %d files, got %d", len(req.Photos), len(files))
 	}
 
+	// Validate files
 	allowedTypes := map[string]bool{
 		"image/jpeg": true,
 		"image/jpg":  true,
@@ -209,13 +209,14 @@ func (s *Service) ProposeAdditionalWork(
 		return nil, errors.New("order not found")
 	}
 
-	// --- Build photo file map: workshop_panel_pricing_no -> []{ fileHeader, caption } ---
-	// Keyed by pricing_no because panels don't have real order_panel_no PKs yet.
+	// Build photo mapping
 	type photoEntry struct {
 		header  *multipart.FileHeader
 		caption string
 	}
+
 	photosByPricing := make(map[uint][]photoEntry)
+
 	for _, meta := range req.Photos {
 		if meta.FileIndex < 0 || meta.FileIndex >= len(files) {
 			return nil, fmt.Errorf("photo file_index %d is out of range", meta.FileIndex)
@@ -239,12 +240,11 @@ func (s *Service) ProposeAdditionalWork(
 		}
 		panel.NegotiationStatus = "proposed_additional"
 		panel.WorkOrderGroupNumber = newGroupNumber
-		panel.CurrentRound = panel.CurrentRound + 1
+		panel.CurrentRound = 1
 		panel.InitialProposer = "workshop"
 		allPanels = append(allPanels, panel)
 	}
 
-	// Map: workshop_panel_pricing_no -> []{ url, caption }
 	type uploadedPhoto struct {
 		url     string
 		caption string
@@ -278,10 +278,12 @@ func (s *Service) ProposeAdditionalWork(
 	}
 
 	err = s.repo.WithTransaction(func(tx *gorm.DB) error {
+		// Create panels
 		if err := s.repo.CreateOrderPanelsBatchTx(tx, allPanels); err != nil {
 			return fmt.Errorf("failed to create order panels: %w", err)
 		}
 
+		// Create negotiation history and photos
 		for _, panel := range allPanels {
 			if panel.WorkshopPanelPricingNo == nil {
 				continue
@@ -297,7 +299,7 @@ func (s *Service) ProposeAdditionalWork(
 				RoundCount:             panel.CurrentRound,
 				ProposedPanelPricingNo: *panel.WorkshopPanelPricingNo,
 				ProposedPrice:          *panel.WorkshopPrice,
-				ProposedServiceType:    panel.WorkshopServiceType,
+				ProposedServiceType:    *panel.WorkshopServiceType,
 				ProposedQty:            *panel.WorkshopQty,
 				InsuranceDecision:      "pending",
 				CreatedBy:              &req.LastModifiedBy,
@@ -308,9 +310,10 @@ func (s *Service) ProposeAdditionalWork(
 			}
 
 			if err := s.repo.CreateNegotiationHistory(tx, negotiationHistory); err != nil {
-				return fmt.Errorf("failed to create repair history for panel %d: %w", panel.OrderPanelNo, err)
+				return fmt.Errorf("failed to create negotiation history for panel %d: %w", panel.OrderPanelNo, err)
 			}
 
+			// Create photos
 			photoRecords := make([]models.NegotiationPhotos, 0, len(uploads))
 			for _, up := range uploads {
 				photoRecords = append(photoRecords, models.NegotiationPhotos{
@@ -325,15 +328,16 @@ func (s *Service) ProposeAdditionalWork(
 			}
 		}
 
+		// Update work order
 		workOrder.AdditionalWorkOrderCount = newGroupNumber
 		workOrder.LastModifiedBy = &req.LastModifiedBy
 		if err := s.repo.UpdateWorkOrderTx(tx, workOrder); err != nil {
 			return fmt.Errorf("failed to update work order: %w", err)
 		}
 
+		// Update order
 		order.Status = "proposed_additional"
 		order.LastModifiedBy = &req.LastModifiedBy
-
 		if err := s.repo.UpdateOrderTx(tx, order); err != nil {
 			return fmt.Errorf("failed to update order status: %w", err)
 		}

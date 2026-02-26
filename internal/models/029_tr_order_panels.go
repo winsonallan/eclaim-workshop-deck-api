@@ -9,22 +9,22 @@ type OrderPanel struct {
 	InitialProposer         string    `gorm:"type:enum('insurer','workshop');not null;default:'insurer'" json:"initial_proposer"`
 	CurrentRound            uint      `gorm:"type:tinyint(3);null" json:"current_round"`
 	InsurancePanelPricingNo *uint     `gorm:"type:int(11);null" json:"insurance_panel_pricing_no"`
-	InsurancePanelName      string    `gorm:"type:varchar(255);null" json:"insurance_panel_name"`
-	InsurerPrice            uint      `gorm:"type:int(11);null" json:"insurer_price"`
+	InsurancePanelName      *string   `gorm:"type:varchar(255);null" json:"insurance_panel_name"`
+	InsurerPrice            *uint     `gorm:"type:int(11);null" json:"insurer_price"`
 	InsurerMeasurementNo    *uint     `gorm:"type:int(11);null" json:"insurer_measurement_no"`
-	InsurerServiceType      string    `gorm:"type:enum('repair','replacement');null" json:"insurer_service_type"`
-	InsurerQty              uint      `gorm:"type:int(11);null" json:"insurer_qty"`
+	InsurerServiceType      *string   `gorm:"type:enum('repair','replacement');null" json:"insurer_service_type"`
+	InsurerQty              *uint     `gorm:"type:int(11);null" json:"insurer_qty"`
 	WorkshopPanelPricingNo  *uint     `gorm:"type:int(11);null" json:"workshop_panel_pricing_no"`
-	WorkshopPanelName       string    `gorm:"type:varchar(255);null" json:"workshop_panel_name"`
+	WorkshopPanelName       *string   `gorm:"type:varchar(255);null" json:"workshop_panel_name"`
 	WorkshopPrice           *uint     `gorm:"type:int(11);null" json:"workshop_price"`
 	WorkshopMeasurementNo   *uint     `gorm:"type:int(11);null" json:"workshop_measurement_no"`
-	WorkshopServiceType     string    `gorm:"type:enum('repair','replacement');null" json:"workshop_service_type"`
+	WorkshopServiceType     *string   `gorm:"type:enum('repair','replacement');null" json:"workshop_service_type"`
 	WorkshopQty             *uint     `gorm:"type:int(11);null" json:"workshop_qty"`
 	FinalPanelPricingNo     *uint     `gorm:"type:int(11);null" json:"final_panel_pricing_no"`
-	FinalPanelName          string    `gorm:"type:varchar(255);null" json:"final_panel_name"`
+	FinalPanelName          *string   `gorm:"type:varchar(255);null" json:"final_panel_name"`
 	FinalPrice              *uint     `gorm:"type:int(11);null" json:"final_price"`
 	FinalMeasurementNo      *uint     `gorm:"type:int(11);null" json:"final_measurement_no"`
-	FinalServiceType        string    `gorm:"type:enum('repair','replacement')" json:"final_service_type"`
+	FinalServiceType        *string   `gorm:"type:enum('repair','replacement')" json:"final_service_type"`
 	FinalQty                *uint     `gorm:"type:int(11);null" json:"final_qty"`
 	IsIncluded              bool      `gorm:"type:tinyint(1);default:1;not null" json:"is_included"`
 	IsSpecialRepair         bool      `gorm:"type:tinyint(1);default:0;not null" json:"is_special_repair"`
