@@ -132,7 +132,7 @@ func (r *Repository) ViewOrderDetails(id uint) (models.Order, error) {
 		Preload("Invoice").
 		Preload("Client").
 		Preload("WorkOrders").
-		Preload("WorkOrders.OrderPanels").
+		Preload("WorkOrders.OrderPanels", "is_locked = 0").
 		Preload("WorkOrders.OrderPanels.InsurerPanelPricing.Measurements").
 		Preload("WorkOrders.OrderPanels.WorkshopPanelPricing.Measurements").
 		Preload("WorkOrders.OrderPanels.InsurerMeasurement").
@@ -228,6 +228,14 @@ func (r *Repository) GetOrderPanelsGroupFromWorkOrderNo(id, woGroup uint) ([]mod
 	var orderPanels []models.OrderPanel
 
 	err := r.db.Where("work_order_no = ? AND is_locked = 0 AND work_order_group_number = ?", id, woGroup).Find(&orderPanels).Error
+
+	return orderPanels, err
+}
+
+func (r *Repository) GetOrderPanelsGroupFromWorkOrderNoTx(tx *gorm.DB, id, woGroup uint) ([]models.OrderPanel, error) {
+	var orderPanels []models.OrderPanel
+
+	err := tx.Where("work_order_no = ? AND is_locked = 0 AND work_order_group_number = ?", id, woGroup).Find(&orderPanels).Error
 
 	return orderPanels, err
 }

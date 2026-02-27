@@ -122,14 +122,20 @@ func (s *Service) CancelNegotiation(req CancelNegotiationRequest) (*models.Order
 				}
 			}
 
-		case "propose_additional", "additional_work":
+		case "proposed_additional", "additional_work":
+			panelsToReject, err := s.repo.GetOrderPanelsGroupFromWorkOrderNoTx(tx, workOrder.WorkOrderNo, addWONo)
+			if err != nil {
+				return fmt.Errorf("failed to get panels for group %d: %w", addWONo, err)
+			}
 			// Workshop cancels additional work proposal
-			for _, o := range workOrder.OrderPanels {
+			for _, o := range panelsToReject {
 				_, err := s.rejectOrderPanelTx(tx, o.OrderPanelNo, req.LastModifiedBy, addWONo)
 
 				if err != nil {
+					fmt.Printf("ERROR: Failed to reject panel %d: %v\n", o.OrderPanelNo, err)
 					return err
 				}
+
 			}
 
 			workOrder.AdditionalWorkOrderCount -= 1
@@ -137,7 +143,6 @@ func (s *Service) CancelNegotiation(req CancelNegotiationRequest) (*models.Order
 			if err != nil {
 				return fmt.Errorf("failed to update work order: %w", err)
 			}
-
 		default:
 			return errors.New("order is not eligible to have its negotiation/work order proposition cancelled")
 		}

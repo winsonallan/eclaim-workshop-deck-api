@@ -175,29 +175,35 @@ func (s *Service) prepareClient(req AddClientRequest) (*models.Client, error) {
 	return client, nil
 }
 
-func (s *Service) rejectOrderPanelTx(tx *gorm.DB, orderPanelNo, lastModifiedBy, woCount uint) (*models.OrderPanel, error) {
+func (s *Service) rejectOrderPanelTx(tx *gorm.DB, orderPanelNo, lastModifiedBy, targetGroupNo uint) (*models.OrderPanel, error) {
 	orderPanel, err := s.repo.GetOrderPanelWithLock(tx, orderPanelNo)
 	if err != nil {
 		return nil, fmt.Errorf("failed to lock order panel %d: %w", orderPanelNo, err)
 	}
 
-	if orderPanel.CurrentRound == woCount && orderPanel.NegotiationStatus != "accepted" && orderPanel.NegotiationStatus != "rejected" {
-		currentNegotiation, err := s.repo.GetSpecificNegotiationHistoryRound(tx, orderPanel.OrderPanelNo, orderPanel.CurrentRound)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get negotiation history: %w", err)
-		}
+	if orderPanel.WorkOrderGroupNumber == targetGroupNo &&
+		orderPanel.NegotiationStatus != "accepted" &&
+		orderPanel.NegotiationStatus != "rejected" {
 
-		if currentNegotiation != nil {
-			curTime := time.Now()
-			currentNegotiation.IsLocked = true
-			currentNegotiation.LastModifiedBy = &lastModifiedBy
-			currentNegotiation.InsuranceDecision = "declined"
-			currentNegotiation.InsuranceNotes = "Cancelled by workshop"
-			currentNegotiation.CompletedDate = &curTime
-
-			err = s.repo.UpdateNegotiationHistoryTx(tx, currentNegotiation)
+		// Cancel negotiation if exists
+		if orderPanel.CurrentRound > 0 {
+			currentNegotiation, err := s.repo.GetSpecificNegotiationHistoryRound(tx, orderPanel.OrderPanelNo, orderPanel.CurrentRound)
 			if err != nil {
-				return nil, fmt.Errorf("failed to update negotiation history: %w", err)
+				return nil, fmt.Errorf("failed to get negotiation history: %w", err)
+			}
+
+			if currentNegotiation != nil {
+				curTime := time.Now()
+				currentNegotiation.IsLocked = true
+				currentNegotiation.LastModifiedBy = &lastModifiedBy
+				currentNegotiation.InsuranceDecision = "declined"
+				currentNegotiation.InsuranceNotes = "Cancelled by workshop"
+				currentNegotiation.CompletedDate = &curTime
+
+				err = s.repo.UpdateNegotiationHistoryTx(tx, currentNegotiation)
+				if err != nil {
+					return nil, fmt.Errorf("failed to update negotiation history: %w", err)
+				}
 			}
 		}
 
@@ -206,12 +212,13 @@ func (s *Service) rejectOrderPanelTx(tx *gorm.DB, orderPanelNo, lastModifiedBy, 
 		orderPanel.IsIncluded = false
 		orderPanel.IsLocked = true
 		orderPanel.LastModifiedBy = &lastModifiedBy
+
+		err = s.repo.UpdateOrderPanelTx(tx, orderPanel)
+		if err != nil {
+			return nil, fmt.Errorf("failed to update order panel: %w", err)
+		}
 	}
 
-	err = s.repo.UpdateOrderPanelTx(tx, orderPanel)
-	if err != nil {
-		return nil, fmt.Errorf("failed to update order panel: %w", err)
-	}
 	return orderPanel, nil
 }
 
