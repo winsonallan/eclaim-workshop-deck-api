@@ -34,7 +34,7 @@ func RegisterRoutes(router *gin.RouterGroup, handler *Handler, authMiddleware gi
 			{
 				repairingOrders.GET("", handler.GetRepairingOrders)
 				// 	repairingOrders.POST("/complete", handler.CompleteRepairs)
-				// 	repairingOrders.POST("/extend-deadline", handler.ExtendDeadline)
+				repairingOrders.PUT("/extend-deadline", handler.ExtendDeadline)
 
 				// 	spareParts := repairingOrders.Group("/spare-parts")
 				// 	{

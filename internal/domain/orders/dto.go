@@ -108,3 +108,9 @@ type ApproveAdditionalProposalRequest struct {
 	DiscountType string    `json:"discount_type"`
 	Discount     float64   `json:"discount"`
 }
+
+type ExtendDeadlineRequest struct {
+	CancelNegotiationRequest
+	NewDeadline time.Time `json:"new_deadline"`
+	Reason      *string   `json:"reason"`
+}

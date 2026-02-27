@@ -31,3 +31,19 @@ func (h *Handler) GetRepairingOrders(c *gin.Context) {
 
 	response.Success(c, http.StatusOK, "Orders Retrieved Successfully", gin.H{"orders": orders})
 }
+
+func (h *Handler) ExtendDeadline(c *gin.Context) {
+	var req ExtendDeadlineRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	order, err := h.service.ExtendDeadline(req)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusCreated, "deadline extended successfully", gin.H{"order": order})
+}
