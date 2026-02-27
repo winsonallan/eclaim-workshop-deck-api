@@ -13,7 +13,6 @@ func (s *Service) GetNegotiatingOrders(workshopId uint) ([]models.Order, error) 
 	return s.repo.GetNegotiatingOrders(workshopId)
 }
 
-// TODO Cancel Negotiation still sets previously accepted panels to rejected
 func (s *Service) CancelNegotiation(req CancelNegotiationRequest) (*models.Order, error) {
 	if req.LastModifiedBy == 0 {
 		return nil, errors.New("last modified by is required")
