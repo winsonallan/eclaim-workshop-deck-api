@@ -4,6 +4,10 @@ import (
 	"eclaim-workshop-deck-api/internal/domain/panels"
 	"eclaim-workshop-deck-api/internal/models"
 	"errors"
+	"fmt"
+	"time"
+
+	"gorm.io/gorm"
 )
 
 func (s *Service) prepareOrderPanels(req OrderPanelRequest, createdBy, workOrderNo uint) (*models.OrderPanel, error) {
@@ -169,4 +173,95 @@ func (s *Service) prepareClient(req AddClientRequest) (*models.Client, error) {
 	}
 
 	return client, nil
+}
+
+func (s *Service) rejectOrderPanelTx(tx *gorm.DB, orderPanelNo, lastModifiedBy, woCount uint) (*models.OrderPanel, error) {
+	orderPanel, err := s.repo.GetOrderPanelWithLock(tx, orderPanelNo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to lock order panel %d: %w", orderPanelNo, err)
+	}
+
+	if orderPanel.CurrentRound == woCount && orderPanel.NegotiationStatus != "accepted" && orderPanel.NegotiationStatus != "rejected" {
+		currentNegotiation, err := s.repo.GetSpecificNegotiationHistoryRound(tx, orderPanel.OrderPanelNo, orderPanel.CurrentRound)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get negotiation history: %w", err)
+		}
+
+		if currentNegotiation != nil {
+			curTime := time.Now()
+			currentNegotiation.IsLocked = true
+			currentNegotiation.LastModifiedBy = &lastModifiedBy
+			currentNegotiation.InsuranceDecision = "declined"
+			currentNegotiation.InsuranceNotes = "Cancelled by workshop"
+			currentNegotiation.CompletedDate = &curTime
+
+			err = s.repo.UpdateNegotiationHistoryTx(tx, currentNegotiation)
+			if err != nil {
+				return nil, fmt.Errorf("failed to update negotiation history: %w", err)
+			}
+		}
+
+		// Mark panel as rejected and excluded
+		orderPanel.NegotiationStatus = "rejected"
+		orderPanel.IsIncluded = false
+		orderPanel.IsLocked = true
+		orderPanel.LastModifiedBy = &lastModifiedBy
+	}
+
+	err = s.repo.UpdateOrderPanelTx(tx, orderPanel)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update order panel: %w", err)
+	}
+	return orderPanel, nil
+}
+
+func (s *Service) acceptOrderPanelTx(tx *gorm.DB, orderPanelNo, lastModifiedBy uint) (*models.OrderPanel, error) {
+	lockedPanel, err := s.repo.GetOrderPanelWithLock(tx, orderPanelNo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to lock panel %d: %w", orderPanelNo, err)
+	}
+
+	if lockedPanel.NegotiationStatus != "pending_workshop" && lockedPanel.NegotiationStatus != "negotiating" {
+		// Already accepted or rejected, skip
+		return lockedPanel, nil
+	}
+
+	// If panel is still pending workshop action, accept it
+	if lockedPanel.NegotiationStatus == "pending_workshop" {
+		if lockedPanel.InitialProposer == "insurer" {
+			lockedPanel.FinalPanelPricingNo = lockedPanel.InsurancePanelPricingNo
+			lockedPanel.FinalPanelName = lockedPanel.InsurancePanelName
+			lockedPanel.FinalPrice = lockedPanel.InsurerPrice
+			lockedPanel.FinalServiceType = lockedPanel.InsurerServiceType
+			lockedPanel.FinalMeasurementNo = lockedPanel.InsurerMeasurementNo
+			lockedPanel.FinalQty = lockedPanel.InsurerQty
+		}
+
+		lockedPanel.NegotiationStatus = "accepted"
+		lockedPanel.LastModifiedBy = &lastModifiedBy
+
+		if err := s.repo.UpdateOrderPanelTx(tx, lockedPanel); err != nil {
+			return nil, fmt.Errorf("failed to accept old panel %d: %w", orderPanelNo, err)
+		}
+	}
+
+	return lockedPanel, nil
+}
+
+func (s *Service) forwardOrderPanelProposalTx(tx *gorm.DB, orderPanelNo, lastModifiedBy uint) (*models.OrderPanel, error) {
+	lockedPanel, err := s.repo.GetOrderPanelWithLock(tx, orderPanelNo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to lock panel %d: %w", orderPanelNo, err)
+	}
+
+	if lockedPanel.NegotiationStatus == "proposed_additional" {
+		lockedPanel.NegotiationStatus = "additional_work"
+		lockedPanel.LastModifiedBy = &lastModifiedBy
+	}
+
+	if err := s.repo.UpdateOrderPanelTx(tx, lockedPanel); err != nil {
+		return nil, fmt.Errorf("failed to update panel %d status: %w", orderPanelNo, err)
+	}
+
+	return lockedPanel, nil
 }

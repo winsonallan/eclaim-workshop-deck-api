@@ -135,6 +135,8 @@ func (r *Repository) ViewOrderDetails(id uint) (models.Order, error) {
 		Preload("WorkOrders.OrderPanels").
 		Preload("WorkOrders.OrderPanels.InsurerPanelPricing.Measurements").
 		Preload("WorkOrders.OrderPanels.WorkshopPanelPricing.Measurements").
+		Preload("WorkOrders.OrderPanels.InsurerMeasurement").
+		Preload("WorkOrders.OrderPanels.WorkshopMeasurement").
 		Preload("WorkOrders.OrderPanels.FinalMeasurement").
 		Preload("WorkOrders.OrderPanels.RepairHistory").
 		Preload("WorkOrders.OrderPanels.NegotiationHistory").
@@ -225,7 +227,7 @@ func (r *Repository) FindWorkOrderFromOrderNo(id uint) (*models.WorkOrder, error
 func (r *Repository) GetOrderPanelsGroupFromWorkOrderNo(id, woGroup uint) ([]models.OrderPanel, error) {
 	var orderPanels []models.OrderPanel
 
-	err := r.db.Where("work_order_no = ? AND is_locked = 0 AND work_order_group_no = ?", id, woGroup).Find(&orderPanels).Error
+	err := r.db.Where("work_order_no = ? AND is_locked = 0 AND work_order_group_number = ?", id, woGroup).Find(&orderPanels).Error
 
 	return orderPanels, err
 }
