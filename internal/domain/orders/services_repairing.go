@@ -18,9 +18,11 @@ func (s *Service) ExtendDeadline(req ExtendDeadlineRequest) (*models.Order, erro
 	if req.LastModifiedBy == 0 {
 		return nil, errors.New("last_modified_by is needed")
 	}
+
 	if req.NewDeadline.IsZero() {
 		return nil, errors.New("new_deadline is needed")
 	}
+
 	if req.OrderNo == 0 {
 		return nil, errors.New("order_no is needed")
 	}
