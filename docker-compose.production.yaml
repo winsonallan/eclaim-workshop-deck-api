@@ -1,0 +1,18 @@
+services:
+  workshop-deck-api:
+    build:
+      context: .
+    container_name: workshop-deck-api
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env.production
+    restart: always
+    environment:
+      - GIN_MODE=release
+    networks:
+      - workshopDeckNet
+
+networks:
+  workshopDeckNet:
+    external: true
