@@ -1,0 +1,109 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+      - dev
+      - master
+    paths:
+      - '**.go'
+      - go.mod
+      - go.sum
+      - '.github/workflows/build.yml'
+  pull_request:
+    branches:
+      - dev
+      - master
+    paths:
+      - '**.go'
+      - go.mod
+      - go.sum
+      - '.github/workflows/build.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  build_test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        go-version: ['1.25', '1.26']
+        os: [ubuntu-latest, macos-latest, windows-latest]  # Matrix of OS environments
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Cache Go modules
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ matrix.go-version }}
+
+      - name: Install dependencies
+        run: go mod tidy
+
+      - name: Run tests
+        run: go test ./... -v
+
+      - name: Run benchmarks with profiling (auto-detect)
+        if: matrix.os == 'ubuntu-latest' && matrix.go-version == '1.26'
+        run: |
+          packages=$(go list ./...)
+
+          for pkg in $packages; do
+            # cek apakah package punya benchmark
+            if go test -run=^$ -bench=. $pkg -benchtime=1x | grep -q "Benchmark"; then
+              name=$(basename $pkg)
+              echo "Running benchmark for $pkg"
+
+              go test $pkg \
+                -run=^$ \
+                -bench=. \
+                -benchmem \
+                -benchtime=5s \
+                -cpuprofile=${name}-cpu.out \
+                -memprofile=${name}-mem.out
+            fi
+          done
+
+      - name: Upload benchmark profiles
+        if: matrix.os == 'ubuntu-latest' && matrix.go-version == '1.26'
+        uses: actions/upload-artifact@v7
+        with:
+          name: benchmark-profiles-${{ matrix.os }}-${{ matrix.go-version }}
+          path: |
+            *-cpu.out
+            *-mem.out
+          if-no-files-found: ignore
+
+      - name: Install graphviz
+        if: matrix.os == 'ubuntu-latest' && matrix.go-version == '1.26'
+        run: sudo apt-get update && sudo apt-get install -y graphviz
+
+      - name: Generate SVG from CPU profile
+        if: matrix.os == 'ubuntu-latest' && matrix.go-version == '1.26'
+        run: |
+          for f in *-cpu.out; do
+            name=$(basename $f .out)
+            go tool pprof -svg $f > ${name}.svg
+          done
+
+      - name: Upload flamegraphs
+        if: matrix.os == 'ubuntu-latest' && matrix.go-version == '1.26'
+        uses: actions/upload-artifact@v7
+        with:
+          name: flamegraphs
+          path: "*.svg"
+
+      - name: Build
+        run: go build -ldflags "-s -w"
