@@ -14,6 +14,41 @@ func (s *Service) GetRepairingOrders(workshopId uint) ([]models.Order, error) {
 	return s.repo.GetRepairingOrders(workshopId)
 }
 
+func (s *Service) GetSparePartsTracking(orderId uint) ([]models.OrderAndRequest, error) {
+	workOrder, err := s.repo.FindWorkOrderFromOrderNo(orderId)
+	if err != nil {
+		return nil, errors.New("order not found")
+	}
+
+	orderPanels, err := s.repo.FindOrderPanelsByWorkOrderNo(workOrder.WorkOrderNo)
+	if err != nil {
+		return nil, errors.New("failed to find order panels for work order")
+	}
+
+	var allHistory []models.RepairHistory
+	for _, oP := range orderPanels {
+		history, err := s.repo.GetLatestRepairHistory(s.repo.db, oP.OrderPanelNo)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch repair history for order panel %d: %w", oP.OrderPanelNo, err)
+		}
+
+		if history != nil {
+			allHistory = append(allHistory, *history)
+		}
+	}
+
+	var orderRequests []models.OrderAndRequest
+	for _, aH := range allHistory {
+		requests, err := s.repo.GetOrderAndRequestsByRepairHistoryNo(aH.RepairHistoryNo)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch order and request for repair history %d: %w", aH.RepairHistoryNo, err)
+		}
+		orderRequests = append(orderRequests, requests...)
+	}
+
+	return orderRequests, nil
+}
+
 func (s *Service) ExtendDeadline(req ExtendDeadlineRequest) (*models.Order, error) {
 	if req.LastModifiedBy == 0 {
 		return nil, errors.New("last_modified_by is needed")

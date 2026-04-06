@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// GetRepairedOrders retrieves repaired orders for a given workshop number.
 func (h *Handler) GetRepairedOrders(c *gin.Context) {
 	woIDStr := c.Query("workshop_no")
 

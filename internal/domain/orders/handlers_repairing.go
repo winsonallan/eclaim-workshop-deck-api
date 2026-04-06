@@ -16,6 +16,7 @@ type missingDataFieldError struct{}
 
 func (e *missingDataFieldError) Error() string { return "missing 'data' field in form" }
 
+// GetRepairingOrders retrieves repairing orders for a given workshop number.
 func (h *Handler) GetRepairingOrders(c *gin.Context) {
 	woIDStr := c.Query("workshop_no")
 
@@ -39,6 +40,30 @@ func (h *Handler) GetRepairingOrders(c *gin.Context) {
 	response.Success(c, http.StatusOK, "Orders Retrieved Successfully", gin.H{"orders": orders})
 }
 
+// GetSparePartsTracking retrieves the spare parts tracking information for a given order no.
+func (h *Handler) GetSparePartsTracking(c *gin.Context) {
+	orderIDStr := c.Query("order_no")
+	if orderIDStr == "" {
+		response.Error(c, http.StatusBadRequest, "order_no is needed")
+		return
+	}
+
+	orderID, err := strconv.ParseUint(orderIDStr, 10, 32)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid order_id format")
+		return
+	}
+
+	tracking, err := h.service.GetSparePartsTracking(uint(orderID))
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Tracking data retrieved successfully", gin.H{"tracking": tracking})
+}
+
+// ExtendDeadline extends the deadline of a repairing order.
 func (h *Handler) ExtendDeadline(c *gin.Context) {
 	var req ExtendDeadlineRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -55,6 +80,7 @@ func (h *Handler) ExtendDeadline(c *gin.Context) {
 	response.Success(c, http.StatusCreated, "deadline extended successfully", gin.H{"order": order})
 }
 
+// UpdateOrderPanelRepairStatus updates the repair status of an order panel, allowing for optional file uploads.
 func (h *Handler) UpdateOrderPanelRepairStatus(c *gin.Context) {
 	err := c.Request.ParseMultipartForm(32 << 20)
 	if err != nil {
@@ -94,6 +120,7 @@ func (h *Handler) UpdateOrderPanelRepairStatus(c *gin.Context) {
 	response.Success(c, http.StatusCreated, "order panel's status updated successfully", gin.H{"order": order})
 }
 
+// CompleteRepairs marks a repairing order as completed, allowing for optional file uploads.
 func (h *Handler) CompleteRepairs(c *gin.Context) {
 	err := c.Request.ParseMultipartForm(32 << 20)
 	if err != nil {
@@ -133,8 +160,7 @@ func (h *Handler) CompleteRepairs(c *gin.Context) {
 	response.Success(c, http.StatusCreated, "repairs completed successfully", gin.H{"order": order})
 }
 
-// parseSparePartForm is a shared helper that reads the multipart "data" JSON
-// and the "files[]" slice from a gin context.
+// parseSparePartForm is a shared helper that reads the multipart "data" JSON and the "files[]" slice from a gin context.
 func parseSparePartForm(c *gin.Context) (*RequestOrderSparePartRequest, []*multipart.FileHeader, error) {
 	if err := c.Request.ParseMultipartForm(32 << 20); err != nil {
 		return nil, nil, err
@@ -158,6 +184,7 @@ func parseSparePartForm(c *gin.Context) (*RequestOrderSparePartRequest, []*multi
 	return &req, form.File["files"], nil
 }
 
+// RequestSpareParts handles the request to create a spare part request for a repairing order, allowing for optional file uploads.
 func (h *Handler) RequestSpareParts(c *gin.Context) {
 	req, files, err := parseSparePartForm(c)
 	if err != nil {
@@ -182,6 +209,7 @@ func (h *Handler) RequestSpareParts(c *gin.Context) {
 	response.Success(c, http.StatusCreated, "spare part request created successfully", gin.H{"order": order})
 }
 
+// OrderSpareParts handles the request to create a spare part order for a repairing order, allowing for optional file uploads.
 func (h *Handler) OrderSpareParts(c *gin.Context) {
 	req, files, err := parseSparePartForm(c)
 	if err != nil {
