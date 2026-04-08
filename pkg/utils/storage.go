@@ -14,6 +14,10 @@ type LocalStorage struct {
 	baseURL  string // used to construct public URLs
 }
 
+func (s *LocalStorage) GetFullURL(path string) string {
+	return s.baseURL + path
+}
+
 func NewLocalStorage(basePath, baseURL string) (*LocalStorage, error) {
 	if err := os.MkdirAll(basePath, 0755); err != nil {
 		return nil, fmt.Errorf("failed to create upload directory: %w", err)
@@ -35,7 +39,7 @@ func (s *LocalStorage) Upload(file multipart.File, header *multipart.FileHeader,
 		return "", fmt.Errorf("failed to save file: %w", err)
 	}
 
-	return fmt.Sprintf("%s/%s/%s", s.baseURL, folder, filename), nil
+	return fmt.Sprintf("/%s/%s", folder, filename), nil
 }
 
 func (s *LocalStorage) Delete(folder, filename string) error {

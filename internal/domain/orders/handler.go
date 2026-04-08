@@ -12,17 +12,21 @@ import (
 	"go.uber.org/zap"
 )
 
+// Handler handles HTTP requests related to orders.
 type Handler struct {
 	service *Service
 	log     *zap.Logger
 	storage *utils.LocalStorage
 }
 
+// NewHandler creates a new Handler instance with the given service, logger, and storage.
 func NewHandler(service *Service, log *zap.Logger, storage *utils.LocalStorage) *Handler {
 	return &Handler{service: service, log: log, storage: storage}
 }
 
 // Read
+
+// GetOrders retrieves all orders.
 func (h *Handler) GetOrders(c *gin.Context) {
 	log := h.log.With(
 		zap.String("requestID", c.GetString("requestID")),
@@ -39,6 +43,7 @@ func (h *Handler) GetOrders(c *gin.Context) {
 	response.Success(c, http.StatusOK, "Orders Retrieved Successfully", gin.H{"orders": orders})
 }
 
+// ViewOrderDetails retrieves the details of a specific order by its ID.
 func (h *Handler) ViewOrderDetails(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)
@@ -58,6 +63,8 @@ func (h *Handler) ViewOrderDetails(c *gin.Context) {
 }
 
 // Create
+
+// AddClient adds a new client to the system.
 func (h *Handler) AddClient(c *gin.Context) {
 	var req AddClientRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -74,6 +81,7 @@ func (h *Handler) AddClient(c *gin.Context) {
 	response.Success(c, http.StatusCreated, "client created successfully", gin.H{"clients": client})
 }
 
+// CreateOrder creates a new order in the system.
 func (h *Handler) CreateOrder(c *gin.Context) {
 	var req CreateOrderRequest
 
@@ -91,6 +99,7 @@ func (h *Handler) CreateOrder(c *gin.Context) {
 	response.Success(c, http.StatusCreated, "order created successfully", gin.H{"orders": order})
 }
 
+// ProposeAdditionalWork allows proposing additional work for an existing order, including uploading related photos.
 func (h *Handler) ProposeAdditionalWork(c *gin.Context) {
 	err := c.Request.ParseMultipartForm(32 << 20)
 	if err != nil {
@@ -130,6 +139,7 @@ func (h *Handler) ProposeAdditionalWork(c *gin.Context) {
 	response.Success(c, http.StatusCreated, "additional work proposed successfully", gin.H{"work_order": result})
 }
 
+// CreateWorkOrder creates a new work order in the system.
 func (h *Handler) CreateWorkOrder(c *gin.Context) {
 	var req CreateWorkOrderRequest
 

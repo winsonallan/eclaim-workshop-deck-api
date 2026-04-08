@@ -2,6 +2,7 @@ package orders
 
 import "time"
 
+// AddClientRequest represents the request payload for adding a new client.
 type AddClientRequest struct {
 	ClientName          string `json:"client_name" binding:"required"`
 	ClientEmail         string `json:"client_email"`
@@ -17,6 +18,7 @@ type AddClientRequest struct {
 	VehiclePrice        uint   `json:"vehicle_price" binding:"required"`
 }
 
+// CreateOrderRequest represents the request payload for creating a new order.
 type CreateOrderRequest struct {
 	WorkshopNo    uint              `json:"workshop_no" binding:"required"`
 	InsuranceNo   uint              `json:"insurance_no"`
@@ -28,6 +30,7 @@ type CreateOrderRequest struct {
 	CreatedBy     uint              `json:"created_by" binding:"required"`
 }
 
+// AddOrderPanelRepairStatus represents the request payload for adding repair status to an order panel.
 type AddOrderPanelRepairStatus struct {
 	OrderPanelNo uint                  `json:"order_panel_no" binding:"required"`
 	Status       string                `json:"status" binding:"required"`
@@ -37,6 +40,7 @@ type AddOrderPanelRepairStatus struct {
 	RepairPhotos []RepairPhotoMetadata `json:"repair_photos"`
 }
 
+// OrderPanelRequest represents the details of and order panel.
 type OrderPanelRequest struct {
 	OrderPanelNo            uint   `json:"order_panel_no" binding:"required"`
 	WOGroupNumber           uint   `json:"wo_group_number"`

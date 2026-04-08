@@ -272,3 +272,20 @@ func (s *Service) forwardOrderPanelProposalTx(tx *gorm.DB, orderPanelNo, lastMod
 
 	return lockedPanel, nil
 }
+
+func AttachFullPhotoURLs(order *models.Order, baseURL string) {
+	for wi := range order.WorkOrders {
+		for pi := range order.WorkOrders[wi].OrderPanels {
+			for hi := range order.WorkOrders[wi].OrderPanels[pi].RepairHistory {
+				for ri := range order.WorkOrders[wi].OrderPanels[pi].RepairHistory[hi].RepairPhotos {
+
+					photo := &order.WorkOrders[wi].OrderPanels[pi].RepairHistory[hi].RepairPhotos[ri]
+
+					if photo.PhotoUrl != "" {
+						photo.PhotoUrl = baseURL + photo.PhotoUrl
+					}
+				}
+			}
+		}
+	}
+}

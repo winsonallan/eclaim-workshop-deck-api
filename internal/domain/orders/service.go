@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"mime/multipart"
+	"os"
 	"time"
 
 	"gorm.io/gorm"
@@ -26,8 +27,16 @@ func (s *Service) GetOrders() ([]models.Order, error) {
 	return s.repo.GetOrders()
 }
 
-func (s *Service) ViewOrderDetails(orderNo uint) (models.Order, error) {
-	return s.repo.ViewOrderDetails(orderNo)
+func (s *Service) ViewOrderDetails(orderNo uint) (*models.Order, error) {
+	order, err := s.repo.ViewOrderDetails(orderNo)
+
+	if err != nil {
+		return nil, err
+	}
+
+	AttachFullPhotoURLs(&order, os.Getenv("BASE_URL"))
+
+	return &order, nil
 }
 
 // Create

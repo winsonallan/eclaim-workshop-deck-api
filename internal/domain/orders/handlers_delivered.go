@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// GetDeliveredOrders retrieves delivered orders for a given workshop number.
 func (h *Handler) GetDeliveredOrders(c *gin.Context) {
 	woIDStr := c.Query("workshop_no")
 
