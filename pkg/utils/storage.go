@@ -39,7 +39,7 @@ func (s *LocalStorage) Upload(file multipart.File, header *multipart.FileHeader,
 		return "", fmt.Errorf("failed to save file: %w", err)
 	}
 
-	return fmt.Sprintf("/%s/%s", folder, filename), nil
+	return fmt.Sprintf("/api/uploads/%s/%s", folder, filename), nil
 }
 
 func (s *LocalStorage) Delete(folder, filename string) error {
