@@ -5,6 +5,7 @@ import (
 	"eclaim-workshop-deck-api/internal/domain/admin"
 	"eclaim-workshop-deck-api/internal/domain/auth"
 	"eclaim-workshop-deck-api/internal/domain/authdemo"
+	"eclaim-workshop-deck-api/internal/domain/invoices"
 	"eclaim-workshop-deck-api/internal/domain/location"
 	"eclaim-workshop-deck-api/internal/domain/orders"
 	"eclaim-workshop-deck-api/internal/domain/panels"
@@ -29,6 +30,7 @@ type Domains struct {
 	SupplierHandler       *suppliers.Handler
 	UserManagementHandler *usermanagement.Handler
 	OrdersHandler         *orders.Handler
+	InvoicesHandler       *invoices.Handler
 }
 
 func InitDomains(db *gorm.DB, cfg *config.Config, log *zap.Logger, localStorage *utils.LocalStorage, dbAlt *gorm.DB) *Domains {
@@ -81,6 +83,11 @@ func InitDomains(db *gorm.DB, cfg *config.Config, log *zap.Logger, localStorage 
 	ordersService := orders.NewService(ordersRepo)
 	ordersHandler := orders.NewHandler(ordersService, log, localStorage)
 
+	// Invoices
+	invoicesRepo := invoices.NewRepository(db)
+	invoicesService := invoices.NewService(invoicesRepo)
+	invoicesHandler := invoices.NewHandler(invoicesService, log, localStorage)
+
 	return &Domains{
 		AuthDemoHandler:       authDemoHandler,
 		PostsHandler:          postsHandler,
@@ -92,5 +99,6 @@ func InitDomains(db *gorm.DB, cfg *config.Config, log *zap.Logger, localStorage 
 		SupplierHandler:       supplierHandler,
 		UserManagementHandler: userManagementHandler,
 		OrdersHandler:         ordersHandler,
+		InvoicesHandler:       invoicesHandler,
 	}
 }

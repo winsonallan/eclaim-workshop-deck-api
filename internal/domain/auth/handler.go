@@ -75,7 +75,7 @@ func (h *Handler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// Accepts the OTP, issues JWT tokens on success.
+// VerifyTwoFactor Accepts the OTP, issues JWT tokens on success.
 func (h *Handler) VerifyTwoFactor(c *gin.Context) {
 	var req VerifyTwoFactorRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

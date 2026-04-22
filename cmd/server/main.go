@@ -14,6 +14,7 @@ import (
 	"eclaim-workshop-deck-api/internal/domain/admin"
 	"eclaim-workshop-deck-api/internal/domain/auth"
 	"eclaim-workshop-deck-api/internal/domain/authdemo"
+	"eclaim-workshop-deck-api/internal/domain/invoices"
 	"eclaim-workshop-deck-api/internal/domain/location"
 	"eclaim-workshop-deck-api/internal/domain/orders"
 	"eclaim-workshop-deck-api/internal/domain/panels"
@@ -93,6 +94,7 @@ func main() {
 	suppliers.RegisterRoutes(api, domains.SupplierHandler, authMiddleware)
 	usermanagement.RegisterRoutes(api, domains.UserManagementHandler, authMiddleware)
 	orders.RegisterRoutes(api, domains.OrdersHandler, authMiddleware)
+	invoices.RegisterRoutes(api, domains.InvoicesHandler, authMiddleware)
 
 	srv := &http.Server{
 		Addr:    ":" + cfg.Port,

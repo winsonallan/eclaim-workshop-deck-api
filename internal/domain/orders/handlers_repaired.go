@@ -3,6 +3,7 @@ package orders
 import (
 	"eclaim-workshop-deck-api/internal/common/response"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -25,10 +26,29 @@ func (h *Handler) GetRepairedOrders(c *gin.Context) {
 
 	orders, err := h.service.GetRepairedOrders(uint(woID))
 
+	for _, o := range orders {
+		AttachFullPhotoURLs(&o, os.Getenv("BASE_URL"))
+	}
+
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	response.Success(c, http.StatusOK, "Orders Retrieved Successfully", gin.H{"orders": orders})
+}
+
+// SetRepairedAsUnfinished marks a repaired vehicle as unfinished, allowing for further repairs or adjustments.
+func (h *Handler) SetRepairedAsUnfinished(c *gin.Context) {
+
+}
+
+// RemindPickup sends a reminder for pickup to the customer for an vehicle that has been repaired and is ready for pickup.
+func (h *Handler) RemindPickup(c *gin.Context) {
+
+}
+
+// SetAsDelivered marks a repaired order as delivered, indicating that the customer has picked up the vehicle.
+func (h *Handler) SetAsDelivered(c *gin.Context) {
+
 }
