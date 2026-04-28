@@ -66,7 +66,7 @@ func (s *Service) ExtendDeadline(req ExtendDeadlineRequest) (*models.Order, erro
 	}
 
 	order.LastModifiedBy = &req.LastModifiedBy
-	order.Eta = req.NewDeadline
+	order.Eta = &req.NewDeadline
 	if req.Reason != nil && *req.Reason != "" {
 		order.Notes = req.Reason
 	}
@@ -296,7 +296,7 @@ func (s *Service) CompleteRepairs(
 		photoType string
 	}
 
-	now := time.Now()
+	now := time.Now().Local()
 	folder := fmt.Sprintf(
 		"repair/%d/complete/%d%02d%02d",
 		workOrder.WorkOrderNo,
@@ -396,6 +396,7 @@ func (s *Service) CompleteRepairs(
 
 	order.Status = "repaired"
 	order.LastModifiedBy = &req.LastModifiedBy
+	order.CompletedAt = &now
 
 	if err := s.repo.UpdateOrder(order); err != nil {
 		return nil, fmt.Errorf("failed to update order for order %d: %w", order.OrderNo, err)

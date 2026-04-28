@@ -43,6 +43,7 @@ func (s *Service) prepareOrderPanels(req OrderPanelRequest, createdBy, workOrder
 		} else {
 			orderPanel.IsSpecialRepair = true
 		}
+
 		switch insurancePanel.ServiceType {
 		case "repair":
 			if req.InsurerMeasurementNo != 0 {

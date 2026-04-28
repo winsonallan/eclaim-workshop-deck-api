@@ -87,6 +87,18 @@ func (r *Repository) FindOrderPanelsByWorkOrderNo(workOrderNo uint) ([]models.Or
 	return orderPanels, nil
 }
 
+func (r *Repository) FindOrdersFromInvoiceNo(id uint) ([]models.Order, error) {
+	var orders []models.Order
+
+	err := r.db.Where("invoice_no = ? AND is_locked = 0", id).Find(&orders).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return orders, nil
+}
+
 // GetLatestNegotiationHistory retrieves the latest negotiation history for a given order panel number.
 func (r *Repository) GetLatestNegotiationHistory(db *gorm.DB, orderPanelNo uint) (*models.NegotiationHistory, error) {
 	var history models.NegotiationHistory

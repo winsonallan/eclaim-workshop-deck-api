@@ -7,7 +7,7 @@ type Delivery struct {
 	ClientNo         uint      `gorm:"type:int(11);not null" json:"client_no"`
 	DeliveryId       string    `gorm:"type:varchar(35);not null"`
 	LastRepairedDate time.Time `gorm:"type:datetime;not null" json:"last_repairerd_date"`
-	DeliveryStatus   string    `gorm:"type:enum('pending_pickup','delivered');null"`
+	DeliveredAt      time.Time `gorm:"date;not null" json:"delivered_at"`
 	PhotoUrl         string    `gorm:"type:varchar(255);not null" json:"photo_url"`
 	CreatedBy        *uint     `gorm:"column:created_by;type:int(11);null" json:"created_by"`
 	CreatedAt        time.Time `gorm:"column:created_date;type:datetime;default:CURRENT_TIMESTAMP" json:"created_date"`

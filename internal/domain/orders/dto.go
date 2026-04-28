@@ -127,8 +127,9 @@ type RemindPickupRequest struct {
 }
 
 type SetAsDeliveredRequest struct {
-	InvoiceNos     []uint `json:"invoice_nos"`
-	LastModifiedBy uint   `json:"last_modified_by"`
+	InvoiceNos     []uint    `json:"invoice_nos"`
+	DeliveredAt    time.Time `json:"delivered_at"`
+	LastModifiedBy uint      `json:"last_modified_by"`
 }
 
 type ApproveAdditionalProposalRequest struct {

@@ -104,7 +104,7 @@ func (s *Service) CreateOrder(req CreateOrderRequest) (*models.Order, error) {
 	}
 
 	if !req.ETA.IsZero() {
-		order.Eta = req.ETA
+		order.Eta = &req.ETA
 	}
 
 	if err := s.repo.CreateOrder(order); err != nil {

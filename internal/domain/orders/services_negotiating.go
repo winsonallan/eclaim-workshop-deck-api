@@ -239,7 +239,7 @@ func (s *Service) ForwardAdditionalProposal(req ApproveAdditionalProposalRequest
 			order.Discount = req.Discount
 		}
 
-		order.Eta = req.ETA
+		order.Eta = &req.ETA
 		order.IsStarted = true
 		order.Status = "additional_work"
 		order.LastModifiedBy = &req.LastModifiedBy

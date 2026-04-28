@@ -297,7 +297,7 @@ func (s *Service) AcceptOrder(id uint, req AcceptDeclineOrder) (*models.Order, e
 		order.LastModifiedBy = &req.LastModifiedBy
 
 		if !req.ETA.IsZero() {
-			order.Eta = req.ETA
+			order.Eta = &req.ETA
 		}
 
 		if req.DiscountType != "" {

@@ -2,6 +2,9 @@ package orders
 
 import (
 	"eclaim-workshop-deck-api/internal/models"
+	"errors"
+	"fmt"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -48,4 +51,35 @@ func (r *Repository) GetRepairedOrders(id uint) ([]models.Order, error) {
 
 func (r *Repository) CreatePickupReminderTx(tx *gorm.DB, pickupReminder *models.PickupReminder) error {
 	return tx.Create(pickupReminder).Error
+}
+
+func (r *Repository) CreateDeliveryTx(tx *gorm.DB, delivery *models.Delivery) error {
+	return tx.Create(delivery).Error
+}
+
+func (r *Repository) FindInvoiceById(invoiceNo uint) (*models.Invoice, error) {
+	var invoice models.Invoice
+	err := r.db.Where("invoice_no = ? AND is_locked = ?", invoiceNo, false).First(&invoice).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return &invoice, err
+}
+
+// GenerateDeliveryId generates the next DEL/YYYY/MM/XXXXXX reference number.
+func (r *Repository) GenerateDeliveryId() (string, error) {
+	now := time.Now()
+	year := now.Year()
+	month := int(now.Month())
+
+	// Count deliveries in the current month to get the next sequence number
+	var count int64
+	err := r.db.Model(&models.Delivery{}).
+		Where("YEAR(created_date) = ? AND MONTH(created_date) = ?", year, month).
+		Count(&count).Error
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("DEL/%d/%02d/%06d", year, month, count+1), nil
 }

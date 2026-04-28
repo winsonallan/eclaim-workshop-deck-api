@@ -113,3 +113,7 @@ func (r *Repository) CreateInvoiceWithInstallments(
 
 	return &created, nil
 }
+
+func (r *Repository) UpdateInvoiceTx(tx *gorm.DB, invoice *models.Invoice) error {
+	return tx.Save(invoice).Error
+}
